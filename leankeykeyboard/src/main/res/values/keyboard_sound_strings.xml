@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_sound_settings">Keyboard sounds</string>
+    <string name="keyboard_sound_settings_desc">Choose the sound and volume for keyboard navigation and actions.</string>
+    <string name="keyboard_sound_enabled">Enable keyboard sounds</string>
+    <string name="keyboard_sound_enabled_desc">Play short effects when moving and entering keys. Off by default.</string>
+    <string name="keyboard_sound_style">Sound character</string>
+    <string name="keyboard_sound_style_soft">Soft</string>
+    <string name="keyboard_sound_style_arcade">Arcade</string>
+    <string name="keyboard_sound_style_glass">Glass</string>
+    <string name="keyboard_sound_style_mechanical">Mechanical</string>
+    <string name="keyboard_sound_volume">Sound volume</string>
+    <string name="keyboard_sound_navigation">Navigation sound</string>
+    <string name="keyboard_sound_confirm">Key confirmation sound</string>
+    <string name="keyboard_sound_delete">Delete sound</string>
+    <string name="keyboard_sound_shift">Shift and Caps Lock sound</string>
+    <string name="keyboard_sound_preview">Preview confirmation sound</string>
+    <string name="keyboard_sound_volume_dialog">Keyboard sound volume</string>
+    <string name="keyboard_sound_save">Save</string>
+    <string-array name="keyboard_sound_choices">
+        <item>Use sound character</item>
+        <item>Single tap</item>
+        <item>Double tap</item>
+        <item>Chime</item>
+        <item>Arcade blip</item>
+        <item>Silent</item>
+    </string-array>
+</resources>

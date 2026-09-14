@@ -40,6 +40,26 @@ public class BaseSettingsFragment extends GuidedStepSupportFragment {
         mCheckedActions.put(mId++, new RadioAction(title, getChecked, onChecked));
     }
 
+    protected void addRadioActionInGroup(int checkSetId, int titleResId, int descResId,
+                                         GetChecked getChecked, OnChecked onChecked) {
+        addRadioActionInGroup(checkSetId, getString(titleResId), getString(descResId), getChecked, onChecked);
+    }
+
+    protected void addRadioActionInGroup(int checkSetId, int titleResId,
+                                         GetChecked getChecked, OnChecked onChecked) {
+        addRadioActionInGroup(checkSetId, getString(titleResId), getChecked, onChecked);
+    }
+
+    protected void addRadioActionInGroup(int checkSetId, String title,
+                                         GetChecked getChecked, OnChecked onChecked) {
+        mCheckedActions.put(mId++, new RadioAction(checkSetId, title, getChecked, onChecked));
+    }
+
+    protected void addRadioActionInGroup(int checkSetId, String title, String desc,
+                                         GetChecked getChecked, OnChecked onChecked) {
+        mCheckedActions.put(mId++, new RadioAction(checkSetId, title, desc, getChecked, onChecked));
+    }
+
     protected void addRadioAction(String title, String desc, GetChecked getChecked, OnChecked onChecked) {
         mCheckedActions.put(mId++, new RadioAction(title, desc, getChecked, onChecked));
     }
@@ -118,17 +138,30 @@ public class BaseSettingsFragment extends GuidedStepSupportFragment {
     }
 
     private static class RadioAction extends CheckedAction {
+        private final int mCheckSetId;
+
         public RadioAction(String title, GetChecked getChecked, OnChecked onChecked) {
+            this(GuidedAction.DEFAULT_CHECK_SET_ID, title, getChecked, onChecked);
+        }
+
+        public RadioAction(int checkSetId, String title, GetChecked getChecked, OnChecked onChecked) {
             super(title, getChecked, onChecked);
+            mCheckSetId = checkSetId;
         }
 
         public RadioAction(String title, String desc, GetChecked getChecked, OnChecked onChecked) {
+            this(GuidedAction.DEFAULT_CHECK_SET_ID, title, desc, getChecked, onChecked);
+        }
+
+        public RadioAction(int checkSetId, String title, String desc,
+                           GetChecked getChecked, OnChecked onChecked) {
             super(title, desc, getChecked, onChecked);
+            mCheckSetId = checkSetId;
         }
 
         @Override
         public int getItemTypeId() {
-            return GuidedAction.DEFAULT_CHECK_SET_ID;
+            return mCheckSetId;
         }
     }
 

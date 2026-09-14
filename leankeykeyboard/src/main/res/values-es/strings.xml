@@ -44,6 +44,7 @@
     <string name="misc_desc">Ajustes Misceláneos</string>
     <string name="keep_on_screen">Mantener en Pantalla</string>
     <string name="keyboardview_keycode_clipboard">Portapapeles</string>
+    <string name="keyboardview_keycode_settings">Configuración del teclado</string>
     <string name="increase_kbd_size">Ampliar teclado</string>
     <string name="increase_kbd_size_desc">Aumentar tamaño del teclado</string>
     <string name="kbd_activation_error2">Ocurrió un error. Intente activar %s con comandos abajo.\n\n%s\n\n%s</string>
@@ -61,4 +62,20 @@
     <string name="show_launcher_icon_desc">Mostrar icono en el lanzador</string>
     <string name="enable_cyclic_navigation">Navegación Cíclica</string>
     <string name="enable_cyclic_navigation_desc">Navegación Cíclica mediante el teclado</string>
+    <string name="custom_theme">Tema personalizado</string>
+    <string name="custom_theme_background_color">Color de fondo del teclado</string>
+    <string name="custom_theme_candidate_color">Color del panel de sugerencias</string>
+    <string name="custom_theme_key_color">Color de las teclas</string>
+    <string name="custom_theme_text_color">Color del texto de las teclas</string>
+    <string name="custom_theme_accent_color">Color de énfasis</string>
+    <string name="custom_theme_choose_image">Elegir imagen de fondo</string>
+    <string name="custom_theme_remove_image">Quitar imagen de fondo</string>
+    <string name="custom_theme_red">Rojo</string>
+    <string name="custom_theme_green">Verde</string>
+    <string name="custom_theme_blue">Azul</string>
+    <string name="custom_theme_cancel">Cancelar</string>
+    <string name="custom_theme_save">Guardar</string>
+    <string name="custom_theme_image_saved">Imagen de fondo guardada</string>
+    <string name="custom_theme_image_error">No se pudo usar esta imagen. Elige una imagen accesible de hasta 20 MB.</string>
+    <string name="custom_theme_image_removed">Imagen de fondo eliminada</string>
 </resources>

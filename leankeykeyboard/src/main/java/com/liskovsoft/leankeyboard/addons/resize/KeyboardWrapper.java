@@ -37,6 +37,10 @@ public class KeyboardWrapper extends Keyboard {
         return wrapper;
     }
 
+    Keyboard getWrappedKeyboard() {
+        return mKeyboard;
+    }
+
     @Override
     public List<Key> getKeys() {
         return mKeyboard.getKeys();
@@ -49,12 +53,20 @@ public class KeyboardWrapper extends Keyboard {
 
     @Override
     public int getHeight() {
-        return (int)(mKeyboard.getHeight() * mHeightFactor);
+        int contentHeight = 0;
+        for (Key key : mKeyboard.getKeys()) {
+            contentHeight = Math.max(contentHeight, key.y + key.height);
+        }
+        return Math.max((int)(mKeyboard.getHeight() * mHeightFactor), contentHeight);
     }
 
     @Override
     public int getMinWidth() {
-        return (int)(mKeyboard.getMinWidth() * mWidthFactor);
+        int contentWidth = 0;
+        for (Key key : mKeyboard.getKeys()) {
+            contentWidth = Math.max(contentWidth, key.x + key.width);
+        }
+        return Math.max((int)(mKeyboard.getMinWidth() * mWidthFactor), contentWidth);
     }
 
     @Override
@@ -74,7 +86,12 @@ public class KeyboardWrapper extends Keyboard {
 
     @Override
     public int[] getNearestKeys(int x, int y) {
-        return mKeyboard.getNearestKeys(x, y);
+        // Keyboard builds its proximity grid before the wrapped key geometry is scaled.
+        // Query that grid in its original coordinate space; callers still validate the
+        // returned candidates against the scaled Key bounds exposed by this wrapper.
+        int originalX = (int) Math.floor(x / Math.max(0.01f, mWidthFactor));
+        int originalY = (int) Math.floor(y / Math.max(0.01f, mHeightFactor));
+        return mKeyboard.getNearestKeys(originalX, originalY);
     }
 
     public void setHeightFactor(float factor) {

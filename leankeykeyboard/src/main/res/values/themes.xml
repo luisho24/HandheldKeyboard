@@ -5,5 +5,8 @@
         <item>Dark Theme|Dark</item>
         <item>Dark Theme 2|Dark2</item>
         <item>Dark Theme 3|Dark3</item>
+        <item>Steam Deck|SteamDeck</item>
+        <item>Xbox|Xbox</item>
+        <item>Nintendo Switch|Switch</item>
     </string-array>
 </resources>

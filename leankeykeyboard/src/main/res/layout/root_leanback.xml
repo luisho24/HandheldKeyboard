@@ -6,13 +6,13 @@
     <View android:id="@+id/candidate_background" android:background="@color/candidate_background" android:layout_width="wrap_content"
           android:layout_height="wrap_content" android:layout_alignBottom="@id/suggestions_container" android:layout_alignParentLeft="true"
           android:layout_alignParentTop="true" android:layout_alignParentRight="true"/>
-    <HorizontalScrollView android:gravity="center" android:id="@+id/suggestions_container" android:scrollbars="none" android:clipChildren="false"
-                          android:layout_width="wrap_content" android:layout_height="@dimen/key_height"
+        <HorizontalScrollView android:gravity="center" android:id="@+id/suggestions_container" android:scrollbars="none" android:clipChildren="false"
+                          android:layout_width="match_parent" android:layout_height="@dimen/candidate_height"
                           android:layout_marginLeft="@dimen/candidate_scroll_view_horz_spacing"
-                          android:layout_marginRight="@dimen/candidate_scroll_view_horz_spacing" android:fillViewport="false"
+                          android:layout_marginRight="@dimen/candidate_scroll_view_horz_spacing" android:fillViewport="true"
                           android:layout_alignParentTop="true" android:layout_centerHorizontal="true">
         <LinearLayout android:gravity="center" android:orientation="horizontal" android:id="@+id/suggestions" android:clipChildren="false"
-                      android:layout_width="wrap_content" android:layout_height="wrap_content" android:divider="@null" android:showDividers="middle"/>
+                      android:layout_width="match_parent" android:layout_height="match_parent" android:divider="@null" android:showDividers="middle"/>
     </HorizontalScrollView>
     <LinearLayout android:gravity="center" android:id="@+id/keyboard" android:paddingTop="@dimen/keyboard_top_spacing" android:clipChildren="false"
                   android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_below="@id/suggestions_container"

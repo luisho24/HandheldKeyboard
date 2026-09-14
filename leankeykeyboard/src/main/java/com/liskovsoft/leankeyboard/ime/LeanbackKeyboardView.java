@@ -9,18 +9,21 @@ import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.Keyboard.Key;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.view.InputDevice;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import androidx.core.content.ContextCompat;
-import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
 import com.liskovsoft.leankeykeyboard.R;
 
 import java.util.Iterator;
@@ -48,6 +51,7 @@ public class LeanbackKeyboardView extends FrameLayout {
     public static final int KEYCODE_VOICE = -7;
     public static final int KEYCODE_LANG_TOGGLE = -9;
     public static final int KEYCODE_CLIPBOARD = -10;
+    public static final int KEYCODE_SETTINGS = -11;
     public static final int NOT_A_KEY = -1;
     public static final int SHIFT_LOCKED = 2;
     public static final int SHIFT_OFF = 0;
@@ -64,6 +68,7 @@ public class LeanbackKeyboardView extends FrameLayout {
     private final int mInactiveMiniKbAlpha;
     private ImageView[] mKeyImageViews;
     private int mKeyTextColor;
+    private int mKeyBackgroundColor = 0x403A4148;
     private Keyboard mKeyboard;
     private KeyHolder[] mKeys;
     private boolean mMiniKeyboardOnScreen;
@@ -73,9 +78,14 @@ public class LeanbackKeyboardView extends FrameLayout {
     private final int mUnfocusStartDelay;
     private final KeyConverter mConverter;
     protected Paint mPaint;
+    private final Paint mHintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mHintBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mKeyBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     protected int mKeyTextSize;
     protected int mModeChangeTextSize;
+    protected float mKeyboardScaleFactor = 1.0f;
     private Drawable mCustomCapsLockDrawable;
+    private int mControllerFamily = -1;
 
     private static class KeyConverter {
         private static final int LOWER_CASE = 0;
@@ -181,15 +191,17 @@ public class LeanbackKeyboardView extends FrameLayout {
             label = key.label.toString();
         }
 
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "LABEL: " + key.label + "->" + label);
-        }
-
         Bitmap bitmap = Bitmap.createBitmap(key.width, key.height, Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         Paint paint = mPaint;
         paint.setColor(mKeyTextColor);
         canvas.drawARGB(0, 0, 0, 0);
+        float keyInset = Math.max(1.0f, Math.min(key.width, key.height) * 0.045f);
+        RectF keyShape = new RectF(keyInset, keyInset, key.width - keyInset, key.height - keyInset);
+        mKeyBackgroundPaint.setColor(mKeyBackgroundColor);
+        float keyRadius = Math.min(key.width, key.height) * 0.22f;
+        canvas.drawRoundRect(keyShape, keyRadius, keyRadius, mKeyBackgroundPaint);
+
         if (key.icon != null) {
             if (key.codes[0] == NOT_A_KEY) {
                 switch (mShiftState) {
@@ -219,10 +231,10 @@ public class LeanbackKeyboardView extends FrameLayout {
                 iconHeight = newSize;
             }
 
-            if (key.codes[0] == ASCII_SPACE && LeanKeyPreferences.instance(getContext()).getEnlargeKeyboard()) {
+            if (key.codes[0] == ASCII_SPACE && mKeyboardScaleFactor > 1.0f) {
                 // space fix for large interface
                 float gap = getResources().getDimension(R.dimen.keyboard_horizontal_gap);
-                float gapDelta = (gap * 1.3f) - gap;
+                float gapDelta = (gap * mKeyboardScaleFactor) - gap;
                 iconWidth -= gapDelta * (ASCII_PERIOD_LEN - 1);
             }
 
@@ -231,7 +243,14 @@ public class LeanbackKeyboardView extends FrameLayout {
 
             canvas.translate((float) dx, (float) dy);
             key.icon.setBounds(0, 0, iconWidth, iconHeight);
+            boolean isSettingsKey = key.codes != null && key.codes.length > 0 && key.codes[0] == KEYCODE_SETTINGS;
+            if (isSettingsKey) {
+                key.icon.setColorFilter(mKeyTextColor, PorterDuff.Mode.SRC_IN);
+            }
             key.icon.draw(canvas);
+            if (isSettingsKey) {
+                key.icon.setColorFilter(null);
+            }
             canvas.translate((float) (-dx), (float) (-dy));
         } else if (label != null) {
             if (label.length() > 1) {
@@ -250,6 +269,8 @@ public class LeanbackKeyboardView extends FrameLayout {
             );
             paint.setShadowLayer(0.0F, 0.0F, 0.0F, 0);
         }
+
+        drawControllerHint(canvas, key);
 
         ImageView image = new ImageView(getContext());
         image.setImageBitmap(bitmap);
@@ -270,6 +291,93 @@ public class LeanbackKeyboardView extends FrameLayout {
         image.setVisibility(View.VISIBLE);
 
         return image;
+    }
+
+    private void drawControllerHint(Canvas canvas, Key key) {
+        if (key.codes == null || key.codes.length == 0) {
+            return;
+        }
+
+        String[] hints = getControllerHints(key.codes[0]);
+        if (hints == null || hints.length == 0) {
+            return;
+        }
+
+        float shortSide = Math.min(key.width, key.height);
+        float margin = Math.max(2f, shortSide * 0.055f);
+        float textSize = Math.max(9f, shortSide * (hints.length > 1 ? 0.15f : 0.18f));
+        mHintPaint.setTextSize(textSize);
+        mHintPaint.setTextAlign(Paint.Align.CENTER);
+        mHintPaint.setColor(0xFFFFFFFF);
+        mHintBackgroundPaint.setColor(0xCC1B2A3B);
+
+        for (int i = 0; i < hints.length; i++) {
+            String hint = hints[i];
+            float horizontalPadding = textSize * 0.34f;
+            float verticalPadding = textSize * 0.16f;
+            float badgeWidth = mHintPaint.measureText(hint) + horizontalPadding * 2;
+            float badgeHeight = textSize + verticalPadding * 2;
+            float left = key.width - badgeWidth - margin;
+            float top = margin + i * (badgeHeight + 2f);
+            RectF badge = new RectF(left, top, left + badgeWidth, top + badgeHeight);
+
+            canvas.drawRoundRect(badge, badgeHeight * 0.35f, badgeHeight * 0.35f, mHintBackgroundPaint);
+            canvas.drawText(hint, left + badgeWidth / 2, top + badgeHeight / 2 - (mHintPaint.ascent() + mHintPaint.descent()) / 2, mHintPaint);
+        }
+    }
+
+    private String[] getControllerHints(int keyCode) {
+        int family = getControllerFamily();
+        switch (keyCode) {
+            case KEYCODE_DELETE:
+                return new String[] {family == 2 ? "□" : family == 3 ? "Y" : "X"};
+            case ASCII_SPACE:
+                return new String[] {family == 2 ? "△" : family == 3 ? "X" : "Y"};
+            case KEYCODE_SHIFT:
+                return new String[] {family == 2 ? "L1" : family == 3 ? "L" : "LB", family == 2 ? "R3" : "RS"};
+            case KEYCODE_SYM_TOGGLE:
+                return new String[] {family == 2 ? "R1" : family == 3 ? "R" : "RB"};
+            case KEYCODE_CAPS_LOCK:
+                return new String[] {family == 2 ? "R3" : "RS"};
+            case KEYCODE_LANG_TOGGLE:
+                return new String[] {family == 2 ? "SHARE" : family == 3 ? "−" : "VIEW"};
+            default:
+                return null;
+        }
+    }
+
+    /** 1 = Xbox/generic, 2 = PlayStation, 3 = Nintendo. */
+    private int getControllerFamily() {
+        if (mControllerFamily != -1) {
+            return mControllerFamily;
+        }
+
+        int[] deviceIds = InputDevice.getDeviceIds();
+        for (int deviceId : deviceIds) {
+            InputDevice device = InputDevice.getDevice(deviceId);
+            if (device == null || (device.getSources() & InputDevice.SOURCE_CLASS_JOYSTICK) != InputDevice.SOURCE_CLASS_JOYSTICK) {
+                continue;
+            }
+
+            String name = device.getName().toLowerCase(java.util.Locale.ROOT);
+            boolean isSony = name.contains("dualshock") || name.contains("dualsense") || name.contains("playstation") || name.contains("sony");
+            boolean isNintendo = name.contains("nintendo") || name.contains("joy-con") || name.contains("joycon") || name.contains("switch pro");
+            if (Build.VERSION.SDK_INT >= 19) {
+                isSony |= device.getVendorId() == 0x054C;
+                isNintendo |= device.getVendorId() == 0x057E;
+            }
+
+            if (isSony) {
+                mControllerFamily = 2;
+                return mControllerFamily;
+            }
+            if (isNintendo) {
+                mControllerFamily = 3;
+                return mControllerFamily;
+            }
+        }
+        mControllerFamily = 1;
+        return mControllerFamily;
     }
 
     private void createKeyImageViews(KeyHolder[] keys) {
@@ -341,7 +449,11 @@ public class LeanbackKeyboardView extends FrameLayout {
     }
 
     public Key getKey(int index) {
-        return mKeys != null && mKeys.length != 0 && index >= 0 && index <= mKeys.length ? mKeys[index].key : null;
+        return mKeys != null && index >= 0 && index < mKeys.length ? mKeys[index].key : null;
+    }
+
+    public int getKeyCount() {
+        return mKeys == null ? 0 : mKeys.length;
     }
 
     public Keyboard getKeyboard() {
@@ -357,61 +469,30 @@ public class LeanbackKeyboardView extends FrameLayout {
      * @return index of the key
      */
     public int getNearestIndex(final float x, final float y) {
-        int result;
-        if (mKeys != null && mKeys.length != 0) {
-            float paddingLeft = (float) getPaddingLeft();
-            float paddingTop = (float) getPaddingTop();
-            float kbHeight = (float) (getMeasuredHeight() - getPaddingTop() - getPaddingBottom());
-            float kbWidth = (float) (getMeasuredWidth() - getPaddingLeft() - getPaddingRight());
-            final int rows = getRowCount();
-            final int cols = getColCount();
-            final int indexVert = (int) ((y - paddingTop) / kbHeight * (float) rows);
-            if (indexVert < 0) {
-                result = 0;
-            } else {
-                result = indexVert;
-                if (indexVert >= rows) {
-                    result = rows - 1;
-                }
-            }
-
-            final int indexHoriz = (int) ((x - paddingLeft) / kbWidth * (float) cols);
-            int indexFull;
-            if (indexHoriz < 0) {
-                indexFull = 0;
-            } else {
-                indexFull = indexHoriz;
-                if (indexHoriz >= cols) {
-                    indexFull = cols - 1;
-                }
-            }
-
-            indexFull += mColCount * result;
-            result = indexFull;
-            if (indexFull > ASCII_PERIOD) { // key goes beyond space
-                if (indexFull < (ASCII_PERIOD + ASCII_PERIOD_LEN)) {  // key stays within space boundary
-                    result = ASCII_PERIOD;
-                }
-            }
-
-            indexFull = result;
-            if (result >= (ASCII_PERIOD + ASCII_PERIOD_LEN)) { // is key position after space?
-                indexFull = result - ASCII_PERIOD_LEN + 1;
-            }
-
-            if (indexFull < 0) {
-                return 0;
-            }
-
-            result = indexFull;
-            if (indexFull >= mKeys.length) {
-                return mKeys.length - 1;
-            }
-        } else {
-            result = 0;
+        if (mKeys == null || mKeys.length == 0) {
+            return 0;
         }
 
-        return result;
+        // Use the rendered key bounds instead of dividing the view into a uniform grid.
+        // Handheld layouts scale rows and columns independently, and wide keys (especially
+        // Space) make grid-based hit testing select the wrong key near row boundaries.
+        int nearestIndex = 0;
+        float nearestDistance = Float.MAX_VALUE;
+        for (int i = 0; i < mKeys.length; i++) {
+            Key key = mKeys[i].key;
+            float dx = x < key.x ? key.x - x : x > key.x + key.width ? x - (key.x + key.width) : 0f;
+            float dy = y < key.y ? key.y - y : y > key.y + key.height ? y - (key.y + key.height) : 0f;
+            float distance = dx * dx + dy * dy;
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestIndex = i;
+                if (distance == 0f) {
+                    break;
+                }
+            }
+        }
+
+        return nearestIndex;
     }
 
     public int getRowCount() {
@@ -635,5 +716,11 @@ public class LeanbackKeyboardView extends FrameLayout {
 
     public void setKeyTextColor(int color) {
         mKeyTextColor = color;
+        invalidateAllKeys();
+    }
+
+    public void setKeyBackgroundColor(int color) {
+        mKeyBackgroundColor = color;
+        invalidateAllKeys();
     }
 }

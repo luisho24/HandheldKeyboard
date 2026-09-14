@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="handheld_display_profile">Handheld screen profile</string>
+    <string name="handheld_keyboard_height">Keyboard height</string>
+    <string name="handheld_keyboard_height_title">Keyboard height</string>
+    <string name="handheld_keyboard_height_summary" formatted="false">Choose a custom height from 24% to 60% of the active screen.</string>
+    <string name="handheld_keyboard_height_value">%1$d%% of screen height</string>
+    <string name="handheld_keyboard_height_auto">Automatic for this screen profile</string>
+    <string name="handheld_keyboard_height_saved">Keyboard height saved. Reopen the keyboard to apply it.</string>
+    <string name="handheld_floating_keyboard">Floating keyboard</string>
+    <string name="handheld_floating_keyboard_desc">Inset the keyboard panel from the screen edges. Choose its surface in Theme settings.</string>
+    <string name="handheld_profile_dialog_title">Choose a screen profile</string>
+    <string-array name="handheld_screen_profile_options">
+        <item>Automatic (recommended)</item>
+        <item>4:3 compact — Anbernic RG406H</item>
+        <item>Square — Anbernic RG Cube</item>
+        <item>16:10 — Steam Deck / wide handheld</item>
+        <item>16:9 — Retroid / Odin / G Cloud / Switch</item>
+        <item>20:9 ultrawide — Razer Edge</item>
+    </string-array>
+</resources>

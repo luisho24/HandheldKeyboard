@@ -6,6 +6,7 @@ import android.inputmethodservice.Keyboard.Key;
 import android.os.Handler;
 import android.text.InputType;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,6 +20,8 @@ import androidx.annotation.NonNull;
 import com.liskovsoft.leankeyboard.ime.LeanbackKeyboardContainer.KeyFocus;
 import com.liskovsoft.leankeyboard.ime.pano.util.TouchNavSpaceTracker;
 import com.liskovsoft.leankeykeyboard.R;
+import com.liskovsoft.leankeyboard.utils.KeyboardSoundPlayer;
+import com.liskovsoft.leankeyboard.utils.KeyboardSoundSettings;
 
 import java.util.ArrayList;
 
@@ -54,6 +57,9 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
     private boolean mShowInput;
     private int mLastEditorIdPhysicalKeyboardWasUsed;
     private boolean mHideKeyboardWhenPhysicalKeyboardUsed = true;
+    private int mLastJoystickDirection;
+    private long mLastJoystickMoveTime;
+    private KeyboardSoundPlayer mSoundPlayer;
 
     public LeanbackKeyboardController(final InputMethodService context,
                                       final InputListener listener) {
@@ -87,6 +93,7 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
         mKeyDownReceived = false;
         mLongPressHandled = false;
         mContext = context;
+        mSoundPlayer = KeyboardSoundPlayer.getInstance(context);
         mResizeSquareDistance = context.getResources().getDimension(R.dimen.resize_move_distance);
         mResizeSquareDistance *= mResizeSquareDistance;
         mInputListener = listener;
@@ -169,6 +176,7 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                     // mContext.hideWindow(); // SmartYouTubeTV fix: force hide keyboard
                     return;
                 case KeyFocus.TYPE_SUGGESTION:
+                    playSound(KeyboardSoundSettings.EVENT_CONFIRM);
                     mInputListener.onEntry(InputListener.ENTRY_TYPE_SUGGESTION, 0, mContainer.getSuggestionText(focus.index));
                     return;
                 default:
@@ -300,8 +308,10 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 return;
             case LeanbackKeyboardView.KEYCODE_CAPS_LOCK:
                 mContainer.onShiftDoubleClick(mContainer.isCapsLockOn());
+                playSound(KeyboardSoundSettings.EVENT_SHIFT);
                 return;
             case LeanbackKeyboardView.KEYCODE_DELETE:
+                playSound(KeyboardSoundSettings.EVENT_DELETE);
                 mInputListener.onEntry(InputListener.ENTRY_TYPE_BACKSPACE, LeanbackKeyboardView.SHIFT_OFF, null);
                 return;
             case LeanbackKeyboardView.KEYCODE_RIGHT:
@@ -323,12 +333,15 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 }
 
                 mContainer.onShiftClick();
+                playSound(KeyboardSoundSettings.EVENT_SHIFT);
                 return;
             case LeanbackKeyboardView.ASCII_SPACE:
+                playSound(KeyboardSoundSettings.EVENT_CONFIRM);
                 mInputListener.onEntry(InputListener.ENTRY_TYPE_STRING, keyCode, " ");
                 mContainer.onSpaceEntry();
                 return;
             case LeanbackKeyboardView.ASCII_PERIOD:
+                playSound(KeyboardSoundSettings.EVENT_CONFIRM);
                 mInputListener.onEntry(InputListener.ENTRY_TYPE_STRING, keyCode, text);
                 mContainer.onPeriodEntry();
                 return;
@@ -339,6 +352,9 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
 
                 mContainer.onLangKeyClick();
                 return;
+            case LeanbackKeyboardView.KEYCODE_SETTINGS:
+                mContainer.openKeyboardSettings();
+                return;
             case LeanbackKeyboardView.KEYCODE_CLIPBOARD:
                 if (Log.isLoggable(TAG, Log.DEBUG)) {
                     Log.d(TAG, "paste from clipboard");
@@ -347,6 +363,7 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 mContainer.onClipboardClick(mInputListener);
                 return;
             default:
+                playSound(KeyboardSoundSettings.EVENT_CONFIRM);
                 mInputListener.onEntry(InputListener.ENTRY_TYPE_STRING, keyCode, text);
                 mContainer.onTextEntry();
                 if (mContainer.isMiniKeyboardOnScreen()) {
@@ -408,12 +425,29 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                     handled = true;
                     break;
                 case KeyEvent.KEYCODE_BUTTON_L1:
-                    handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_LEFT, null);
+                    if (eventRepeatCount == 0) {
+                        handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_SHIFT, null);
+                    }
                     handled = true;
                     break;
                 case KeyEvent.KEYCODE_BUTTON_R1:
+                    if (eventRepeatCount == 0) {
+                        handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_SYM_TOGGLE, null);
+                    }
+                    handled = true;
+                    break;
+                case KeyEvent.KEYCODE_BUTTON_L2:
+                    handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_LEFT, null);
+                    handled = true;
+                    break;
+                case KeyEvent.KEYCODE_BUTTON_R2:
                     handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_RIGHT, null);
                     handled = true;
+                    break;
+                case KeyEvent.KEYCODE_BUTTON_SELECT:
+                case KeyEvent.KEYCODE_BUTTON_START:
+                    handled = true;
+                    break;
                 case KeyEvent.KEYCODE_BUTTON_THUMBL:
                 case KeyEvent.KEYCODE_BUTTON_THUMBR:
                     break;
@@ -473,13 +507,22 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 case KeyEvent.KEYCODE_BUTTON_Y:
                 case KeyEvent.KEYCODE_BUTTON_L1:
                 case KeyEvent.KEYCODE_BUTTON_R1:
+                case KeyEvent.KEYCODE_BUTTON_L2:
+                case KeyEvent.KEYCODE_BUTTON_R2:
                     break;
                 case KeyEvent.KEYCODE_BUTTON_THUMBL:
-                    handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_SYM_TOGGLE, null);
                     handled = true;
                     break;
                 case KeyEvent.KEYCODE_BUTTON_THUMBR:
                     handleCommitKeyboardKey(LeanbackKeyboardView.KEYCODE_CAPS_LOCK, null);
+                    handled = true;
+                    break;
+                case KeyEvent.KEYCODE_BUTTON_SELECT:
+                    mContainer.onLangKeyClick();
+                    handled = true;
+                    break;
+                case KeyEvent.KEYCODE_BUTTON_START:
+                    mInputListener.onEntry(InputListener.ENTRY_TYPE_ACTION, 0, null);
                     handled = true;
                     break;
                 case KeyEvent.KEYCODE_VOICE_ASSIST:
@@ -571,15 +614,23 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
         LeanbackKeyboardContainer container = mContainer;
         LeanbackKeyboardContainer.KeyFocus focus = mTempFocus;
         container.getBestFocus(x, y, focus);
+        boolean moved = focusChanged(container.getCurrFocus(), focus);
         mContainer.setFocus(mTempFocus, false);
+        if (moved) {
+            playSound(KeyboardSoundSettings.EVENT_NAVIGATION);
+        }
     }
 
     private boolean onDirectionalMove(int dir) {
         if (mContainer.getNextFocusInDirection(dir, mCurrentFocus, mTempFocus)) {
             mContainer.updateCyclicFocus(dir, mCurrentFocus, mTempFocus);
+            boolean moved = focusChanged(mContainer.getCurrFocus(), mTempFocus);
             mContainer.setFocus(mTempFocus);
             mCurrentFocus.set(mTempFocus);
             clearKeyIfNecessary();
+            if (moved) {
+                playSound(KeyboardSoundSettings.EVENT_NAVIGATION);
+            }
         }
 
         return true;
@@ -591,8 +642,22 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
         mTempPoint.y = (float) focus.rect.centerY();
         PointF pos = getBestSnapPosition(mTempPoint, time);
         mContainer.getBestFocus(pos.x, pos.y, mTempFocus);
+        boolean moved = focusChanged(focus, mTempFocus);
         mContainer.setFocus(mTempFocus);
+        if (moved) {
+            playSound(KeyboardSoundSettings.EVENT_NAVIGATION);
+        }
         updatePositionToCurrentFocus();
+    }
+
+    private boolean focusChanged(KeyFocus current, KeyFocus next) {
+        return current != null && next != null && (current.type != next.type || current.index != next.index);
+    }
+
+    private void playSound(int event) {
+        if (mSoundPlayer != null) {
+            mSoundPlayer.playEvent(event);
+        }
     }
 
     /**
@@ -662,7 +727,43 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
     }
     
     public boolean onGenericMotionEvent(MotionEvent event) {
-        return mSpaceTracker != null && mContext != null && mContext.isInputViewShown() && mSpaceTracker.onGenericMotionEvent(event);
+        if (mSpaceTracker != null && mContext != null && mContext.isInputViewShown() && mSpaceTracker.onGenericMotionEvent(event)) {
+            return true;
+        }
+
+        if (mContext == null || !mContext.isInputViewShown() || event.getAction() != MotionEvent.ACTION_MOVE ||
+                (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) != InputDevice.SOURCE_CLASS_JOYSTICK) {
+            return false;
+        }
+
+        // Use the left stick (or hat axes) as a conventional D-pad. The right stick is intentionally unused.
+        float x = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+        float y = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+        if (Math.abs(x) < 0.5f && Math.abs(y) < 0.5f) {
+            x = event.getAxisValue(MotionEvent.AXIS_X);
+            y = event.getAxisValue(MotionEvent.AXIS_Y);
+        }
+
+        int direction = 0;
+        if (Math.abs(x) >= 0.55f) {
+            direction |= x < 0 ? LeanbackKeyboardContainer.DIRECTION_LEFT : LeanbackKeyboardContainer.DIRECTION_RIGHT;
+        }
+        if (Math.abs(y) >= 0.55f) {
+            direction |= y < 0 ? LeanbackKeyboardContainer.DIRECTION_UP : LeanbackKeyboardContainer.DIRECTION_DOWN;
+        }
+
+        if (direction == 0) {
+            mLastJoystickDirection = 0;
+            return false;
+        }
+
+        long now = android.os.SystemClock.uptimeMillis();
+        if (direction != mLastJoystickDirection || now - mLastJoystickMoveTime >= 190) {
+            onDirectionalMove(direction);
+            mLastJoystickDirection = direction;
+            mLastJoystickMoveTime = now;
+        }
+        return true;
     }
 
     /**
@@ -875,6 +976,7 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 commitKey();
             } else {
                 mContainer.onShiftDoubleClick(mFirstClickShiftLocked);
+                playSound(KeyboardSoundSettings.EVENT_SHIFT);
                 reset();
             }
         }

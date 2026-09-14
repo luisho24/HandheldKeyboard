@@ -731,20 +731,26 @@ public class LeanbackKeyboardContainer {
                     break;
             }
 
-            Log.d(TAG, "Same key focus found! Direction: " + direction + " Key Label: " + oldFocus.label);
+            Log.d(TAG, "Same key focus found! Direction: " + direction);
         }
     }
 
     public boolean getNextFocusInDirection(int direction, KeyFocus startFocus, KeyFocus nextFocus) {
         switch (startFocus.type) {
             case KeyFocus.TYPE_MAIN:
+                if (moveToDirectionalKey(direction, startFocus, nextFocus)) {
+                    return true;
+                }
+
+                // Keep the existing transitions out of the keyboard (suggestions, action
+                // button, and cyclic wrap handling) when there is no key in this direction.
                 Key key = getKey(startFocus.type, startFocus.index);
+                if (key == null) {
+                    return false;
+                }
                 float centerDelta = (float) startFocus.rect.height() / 2.0F;
                 float centerX = (float) startFocus.rect.centerX();
                 float centerY = (float) startFocus.rect.centerY();
-                if (startFocus.code == LeanbackKeyboardView.ASCII_SPACE) {
-                    centerX = mX;
-                }
 
                 if ((direction & DIRECTION_LEFT) != 0) {
                     if ((key.edgeFlags & Keyboard.EDGE_LEFT) == 0) {
@@ -840,6 +846,62 @@ public class LeanbackKeyboardContainer {
         return true;
     }
 
+    /**
+     * Move to the nearest actual key rectangle in the requested direction.
+     * The previous point projection used half a key's height for horizontal movement and
+     * then quantized the result into a fixed grid. That could leave focus on the same key
+     * on wide handheld layouts, and it did not model the wide Space key or uneven rows.
+     */
+    private boolean moveToDirectionalKey(int direction, KeyFocus startFocus, KeyFocus nextFocus) {
+        int horizontalDirection = direction & (DIRECTION_LEFT | DIRECTION_RIGHT);
+        int verticalDirection = direction & (DIRECTION_UP | DIRECTION_DOWN);
+        if (horizontalDirection == (DIRECTION_LEFT | DIRECTION_RIGHT) ||
+                verticalDirection == (DIRECTION_UP | DIRECTION_DOWN)) {
+            return false;
+        }
+
+        KeyboardKeyNavigator.Direction navigationDirection;
+        if (horizontalDirection == DIRECTION_LEFT && verticalDirection == DIRECTION_UP) {
+            navigationDirection = KeyboardKeyNavigator.Direction.UP_LEFT;
+        } else if (horizontalDirection == DIRECTION_RIGHT && verticalDirection == DIRECTION_UP) {
+            navigationDirection = KeyboardKeyNavigator.Direction.UP_RIGHT;
+        } else if (horizontalDirection == DIRECTION_LEFT && verticalDirection == DIRECTION_DOWN) {
+            navigationDirection = KeyboardKeyNavigator.Direction.DOWN_LEFT;
+        } else if (horizontalDirection == DIRECTION_RIGHT && verticalDirection == DIRECTION_DOWN) {
+            navigationDirection = KeyboardKeyNavigator.Direction.DOWN_RIGHT;
+        } else if (horizontalDirection == DIRECTION_LEFT) {
+            navigationDirection = KeyboardKeyNavigator.Direction.LEFT;
+        } else if (horizontalDirection == DIRECTION_RIGHT) {
+            navigationDirection = KeyboardKeyNavigator.Direction.RIGHT;
+        } else if (verticalDirection == DIRECTION_UP) {
+            navigationDirection = KeyboardKeyNavigator.Direction.UP;
+        } else if (verticalDirection == DIRECTION_DOWN) {
+            navigationDirection = KeyboardKeyNavigator.Direction.DOWN;
+        } else {
+            return false;
+        }
+
+        Rect keyboardRect = new Rect();
+        offsetRect(keyboardRect, mMainKeyboardView);
+        int keyCount = mMainKeyboardView.getKeyCount();
+        List<KeyboardKeyNavigator.KeyBounds> keyBounds = new ArrayList<>(keyCount);
+        for (int i = 0; i < keyCount; i++) {
+            Key candidate = mMainKeyboardView.getKey(i);
+            keyBounds.add(candidate == null ? null : new KeyboardKeyNavigator.KeyBounds(
+                    candidate.x, candidate.y,
+                    candidate.x + candidate.width, candidate.y + candidate.height));
+        }
+
+        int bestIndex = KeyboardKeyNavigator.findNext(keyBounds, startFocus.index, navigationDirection);
+        Key bestKey = mMainKeyboardView.getKey(bestIndex);
+        if (bestKey == null) {
+            return false;
+        }
+
+        configureFocus(nextFocus, keyboardRect, bestIndex, bestKey, KeyFocus.TYPE_MAIN);
+        return true;
+    }
+
     public CharSequence getSuggestionText(int idx) {
         CharSequence result = null;
         if (idx >= 0) {
@@ -901,8 +963,7 @@ public class LeanbackKeyboardContainer {
             setTouchState(LeanbackKeyboardContainer.TOUCH_STATE_NO_TOUCH);
             return true;
         } else if (keyCode == LeanbackKeyboardView.KEYCODE_LANG_TOGGLE) {
-            Helpers.startActivity(mContext, KbSettingsActivity.class);
-            mContext.hideIme();
+            openKeyboardSettings();
             return true;
         } else {
             if (mCurrKeyInfo.type == KeyFocus.TYPE_MAIN) {
@@ -916,6 +977,11 @@ public class LeanbackKeyboardContainer {
 
             return false;
         }
+    }
+
+    public void openKeyboardSettings() {
+        Helpers.startActivity(mContext, KbSettingsActivity.class);
+        mContext.hideIme();
     }
 
     public void onModeChangeClick() {

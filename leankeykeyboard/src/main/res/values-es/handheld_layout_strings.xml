@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="handheld_display_profile">Perfil de pantalla portátil</string>
+    <string name="handheld_keyboard_height">Altura del teclado</string>
+    <string name="handheld_keyboard_height_title">Altura del teclado</string>
+    <string name="handheld_keyboard_height_summary">Elige una altura personalizada entre el 24 % y el 60 % de la pantalla activa.</string>
+    <string name="handheld_keyboard_height_value">%1$d %% de la altura de pantalla</string>
+    <string name="handheld_keyboard_height_auto">Automática para este perfil</string>
+    <string name="handheld_keyboard_height_saved">Altura guardada. Vuelve a abrir el teclado para aplicarla.</string>
+    <string name="handheld_floating_keyboard">Teclado flotante</string>
+    <string name="handheld_floating_keyboard_desc">Separa el panel de los bordes. Elige su superficie en los ajustes de tema.</string>
+    <string name="handheld_profile_dialog_title">Elegir perfil de pantalla</string>
+    <string-array name="handheld_screen_profile_options">
+        <item>Automático (recomendado)</item>
+        <item>Compacto 4:3 — Anbernic RG406H</item>
+        <item>Cuadrado — Anbernic RG Cube</item>
+        <item>16:10 — Steam Deck / portátil panorámico</item>
+        <item>16:9 — Retroid / Odin / G Cloud / Switch</item>
+        <item>Ultrapanorámico 20:9 — Razer Edge</item>
+    </string-array>
+</resources>

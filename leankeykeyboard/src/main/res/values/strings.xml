@@ -44,6 +44,7 @@
     <string name="misc_desc">Misc Settings</string>
     <string name="keep_on_screen">Keep on Screen</string>
     <string name="keyboardview_keycode_clipboard">Clipboard</string>
+    <string name="keyboardview_keycode_settings">Keyboard settings</string>
     <string name="increase_kbd_size">Enlarge keyboard</string>
     <string name="increase_kbd_size_desc">Increase keyboard size</string>
     <string name="kbd_activation_error2">Error occurred. Try to activate %s with commands below.\n\n%s\n\n%s</string>
@@ -61,4 +62,20 @@
     <string name="show_launcher_icon_desc">Show launcher icon</string>
     <string name="enable_cyclic_navigation">Сyclic navigation</string>
     <string name="enable_cyclic_navigation_desc">Сyclic navigation through keyboard</string>
+    <string name="custom_theme">Custom theme</string>
+    <string name="custom_theme_background_color">Keyboard background color</string>
+    <string name="custom_theme_candidate_color">Suggestions panel color</string>
+    <string name="custom_theme_key_color">Key color</string>
+    <string name="custom_theme_text_color">Key text color</string>
+    <string name="custom_theme_accent_color">Accent color</string>
+    <string name="custom_theme_choose_image">Choose background image</string>
+    <string name="custom_theme_remove_image">Remove background image</string>
+    <string name="custom_theme_red">Red</string>
+    <string name="custom_theme_green">Green</string>
+    <string name="custom_theme_blue">Blue</string>
+    <string name="custom_theme_cancel">Cancel</string>
+    <string name="custom_theme_save">Save</string>
+    <string name="custom_theme_image_saved">Background image saved</string>
+    <string name="custom_theme_image_error">Could not use this image. Choose a readable image up to 20 MB.</string>
+    <string name="custom_theme_image_removed">Background image removed</string>
 </resources>

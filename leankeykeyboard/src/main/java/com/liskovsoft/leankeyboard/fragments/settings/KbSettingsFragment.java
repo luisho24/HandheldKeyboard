@@ -21,9 +21,22 @@ public class KbSettingsFragment extends BaseSettingsFragment {
             startActivity(intent);
         });
 
+        if ("com.handheldkeyboard.ime".equals(context.getPackageName())) {
+            addNextAction(R.string.handheld_onboarding_restart, () -> {
+                Intent intent = new Intent();
+                intent.setClassName(context.getPackageName(),
+                        "com.liskovsoft.leankeyboard.activity.settings.HandheldOnboardingActivity");
+                intent.putExtra("return_to_settings", true);
+                startActivity(intent);
+            });
+        }
+
         addNextAction(R.string.change_layout, () -> startGuidedFragment(new KbLayoutFragment()));
 
         addNextAction(R.string.change_theme, () -> startGuidedFragment(new KbThemeFragment()));
+
+        addNextAction(R.string.keyboard_sound_settings,
+                () -> startGuidedFragment(new KeyboardSoundSettingsFragment()));
 
         addNextAction(R.string.misc, () -> startGuidedFragment(new MiscFragment()));
 

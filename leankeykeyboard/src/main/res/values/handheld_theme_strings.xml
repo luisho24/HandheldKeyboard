@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_appearance_system">Follow Android system</string>
+    <string name="theme_appearance_system_desc">Use the system light or dark setting for the active custom variant.</string>
+    <string name="theme_appearance_light">Always use light</string>
+    <string name="theme_appearance_light_desc">Show the light variant of the custom theme.</string>
+    <string name="theme_appearance_dark">Always use dark</string>
+    <string name="theme_appearance_dark_desc">Show the dark variant of the custom theme.</string>
+    <string name="custom_theme_edit_light">Edit light variant</string>
+    <string name="custom_theme_edit_dark">Edit dark variant</string>
+    <string name="custom_theme_color_source_custom">Use custom colors</string>
+    <string name="custom_theme_color_source_custom_desc">Edit and use the saved colors for each variant.</string>
+    <string name="custom_theme_color_source_system">Follow system colors</string>
+    <string name="custom_theme_color_source_system_desc">Use wallpaper-derived colors on Android 12 and newer. Earlier versions use the saved custom palette.</string>
+    <string name="theme_surface_solid">Solid keyboard surface</string>
+    <string name="theme_surface_solid_desc">Use fully opaque keyboard, key, and suggestion surfaces.</string>
+    <string name="theme_surface_translucent">Translucent keyboard surface</string>
+    <string name="theme_surface_translucent_desc">Blend the surfaces with what is behind the keyboard.</string>
+    <string name="theme_surface_glass">Frosted glass surface</string>
+    <string name="theme_surface_glass_desc">Use backdrop blur on Android 12 and newer; earlier versions fall back to translucency.</string>
+    <string name="theme_surface_liquid">Liquid glass</string>
+    <string name="theme_surface_liquid_desc">Keyboard-bounded blur with a luminous, refractive glass rim.</string>
+    <string name="theme_surface_opacity">Surface opacity</string>
+</resources>

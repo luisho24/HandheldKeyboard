@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_appearance_system">Seguir el sistema</string>
+    <string name="theme_appearance_system_desc">Usar el modo claro u oscuro de Android para elegir la variante personalizada.</string>
+    <string name="theme_appearance_light">Usar siempre el tema claro</string>
+    <string name="theme_appearance_light_desc">Mostrar la variante clara del tema personalizado.</string>
+    <string name="theme_appearance_dark">Usar siempre el tema oscuro</string>
+    <string name="theme_appearance_dark_desc">Mostrar la variante oscura del tema personalizado.</string>
+    <string name="custom_theme_edit_light">Editar variante clara</string>
+    <string name="custom_theme_edit_dark">Editar variante oscura</string>
+    <string name="custom_theme_color_source_custom">Usar colores personalizados</string>
+    <string name="custom_theme_color_source_custom_desc">Editar y usar los colores guardados para cada variante.</string>
+    <string name="custom_theme_color_source_system">Seguir los colores del sistema</string>
+    <string name="custom_theme_color_source_system_desc">Usar los colores derivados del fondo de pantalla en Android 12 o posterior. Las versiones anteriores usan la paleta personalizada guardada.</string>
+    <string name="theme_surface_solid">Superficie sólida</string>
+    <string name="theme_surface_solid_desc">Usar fondos opacos en el teclado, las teclas y las sugerencias.</string>
+    <string name="theme_surface_translucent">Superficie translúcida</string>
+    <string name="theme_surface_translucent_desc">Mezclar las superficies con el contenido que está detrás del teclado.</string>
+    <string name="theme_surface_glass">Superficie de vidrio esmerilado</string>
+    <string name="theme_surface_glass_desc">Aplicar desenfoque en Android 12 o posterior; las versiones anteriores usan translucidez.</string>
+    <string name="theme_surface_liquid">Vidrio líquido</string>
+    <string name="theme_surface_liquid_desc">Desenfoque limitado al teclado con un borde luminoso de vidrio refractado.</string>
+    <string name="theme_surface_opacity">Opacidad de la superficie</string>
+</resources>

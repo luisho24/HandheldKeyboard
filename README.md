@@ -1,66 +1,50 @@
-![Logo of LeanKeyboard](img/leankeykeyboard_logo_small.png "Logo of LeanKeyboard") LeanKeyboard
-=========
+# Handheld Keyboard
 
-[![MPLv2 License](http://img.shields.io/badge/license-MPLv2-blue.svg?style=flat-square)](https://www.mozilla.org/MPL/2.0/)
+A controller-friendly Android keyboard for handheld gaming devices, Android TV, and touchscreen use. This is a modified version of [LeanKeyboard](https://github.com/yuliskov/LeanKeyboard/tree/6.1.31).
 
-__LeanKeyboard: Keyboard for Android-based set-top boxes and TVs:__
+**Modified on 2026-09-14.** This project adds handheld layouts and navigation, a redesigned onboarding flow, adjustable sizing, custom light/dark themes, keyboard surface effects, and configurable sound feedback. The inherited source is distributed under GPL-3.0-only; see [LICENSE.md](LICENSE.md).
 
- * <a href="https://play.google.com/store/apps/details?id=org.liskovsoft.androidtv.rukeyboard" target="_blank">Google Play page</a>
- * <a href="https://t.me/LeanKeyboard">Telegram group</a>
+## Features
 
-### Features:
- * Designed for TV screens.
- * Any remote controller support.
- * Supports dozens of languages.
- * Doesn't depend on Google Services.
- * __No root required!__
+- Navigate and type with a D-pad or supported game controller, with controller-aware key hints and remapping.
+- Adapt the keyboard to handheld screen sizes and landscape layouts; adjust its height or use a floating layout.
+- Choose system, light, or dark appearance. Edit colors and background images for the custom theme variants.
+- Select solid, translucent, or glass-style keyboard surfaces.
+- Configure sounds for navigation, typing, deletion, and modifier changes.
+- Preview themes in onboarding and open keyboard settings directly from the keyboard.
+- Retain LeanKeyboard's language and layout support.
 
-__Tip: Switch to other language with language button or by long press on the space bar__
+## Download and install
 
-__Tip: Do long press on the language button to choose between available languages__
+Download the latest APK from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The published v0.4.0 APK is a **debug-signed sideload build**, suitable for testing; it is not signed with a production release key.
 
-### Screenshots:
- * __[Open screenshots](#screens)__
+Install it with Android Debug Bridge:
 
-### Install LeanKeyboard:
-__Easy installation in less than 10 minutes with only FireTV__
- * <a href="https://github.com/yuliskov/LeanKeyboard/wiki/How-to-Install-LeanKeyKeyboard-on-FireTV">Install LeanKeyKeyboard (only FireTV needed)</a>
+    adb install -r HandheldKeyboard-v0.4.0-debug.apk
+    adb shell ime enable com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
+    adb shell ime set com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
 
-__Standard installation via ADB__
- * If you don't know how to sideload/install apps via ADB, read a tutorial (e.g. <a href="http://kodi.wiki/view/HOW-TO:Install_Kodi_on_Fire_TV" target="_blank">this one</a>)
- * <a href="https://github.com/yuliskov/LeanKeyboard/releases" target="_blank">Download latest LeanKeyKeyboard APK</a> and sideload/install with adb: 
- * *adb install -r LeanKeyboard.apk*
- * Enjoy :)
+You can also enable and select the keyboard in Android's Languages & input settings.
 
-### Donation:
-If you want to support my developments you are welcome to buy me a cup of coffee :)
- <!-- * [QIWI (RU, Visa)](https://qiwi.com/n/GUESS025)   -->
- <!-- * [DonatePay (RU, **PayPal**, Visa)](https://new.donatepay.ru/@459197)   -->
- * [**Patreon**](https://www.patreon.com/yuliskov)  
- * **PayPal**: firsthash at gmail.com
- * **BTC**: 1JAT5VVWarVBkpVbNDn8UA8HXNdrukuBSx  
- * **LTC**: ltc1qgc24eq9jl9cq78qnd5jpqhemkajg9vudwyd8pw  
- * **ETH**: 0xe455E21a085ae195a097cd4F456051A9916A5064  
- * **ETC**: 0x209eCd33Fa61fA92167595eB3Aea92EE1905c815  
- * **XMR**: 48QsMjqfkeW54vkgKyRnjodtYxdmLk6HXfTWPSZoaFPEDpoHDwFUciGCe1QC9VAeGrgGw4PKNAksX9RW7myFqYJQDN5cHGT
- * **BNB**: bnb1amjr7fauftxxyhe4f95280vklctj243k9u55fq  
- * **DOGE**: DBnqJwJs2GJBxrCDsi5bXwSmjnz8uGdUpB  
- * **eUSDT**: 0xe455e21a085ae195a097cd4f456051a9916a5064
- 
-### Reviews / Articles:
- * [__XDA Discussion__](https://forum.xda-developers.com/fire-tv/general/guide-change-screen-keyboard-to-leankey-t3527675)
- 
-### Changelog:
- * [Check releases page for changelog ..](https://github.com/yuliskov/LeanKeyboard/releases)
+## Build from source
 
-### Contributors:
- * __[aglt](https://github.com/aglt)__ (Icelandic lang)
- * __[rabin111](https://github.com/rabin111)__ (Thai lang)
+Requirements: JDK 17 and Android SDK Platform 35.
 
-### Developer:
- * __[yuliskov](https://github.com/yuliskov)__ (design & coding)
+    ./gradlew :leankeykeyboard:assembleHandheldDebug
+    ./gradlew :leankeykeyboard:testHandheldDebugUnitTest
 
-### Screens:
-![Screenshot of LeanKeyboard](img/leankeykeyboard_screenshot_01.png "Screenshot of LeanKeyboard")
-![Screenshot of LeanKeyboard](img/leankeykeyboard_screenshot_02.png "Screenshot of LeanKeyboard")
-![Screenshot of LeanKeyboard](img/leankeykeyboard_screenshot_03.png "Screenshot of LeanKeyboard")
+The APK is written to leankeykeyboard/build/outputs/apk/handheld/debug/.
+
+## AI-assisted development
+
+Development of this project used AI coding assistance under human direction and review. That describes how the source was developed; the shipped app contains no AI model, AI SDK, AI API client, or AI service integration.
+
+## Privacy
+
+See [PRIVACY.md](PRIVACY.md) for what the keyboard handles on-device and the limits of the optional Android voice-recognition feature. The app does not send typed text, theme images, or settings to a developer-operated service.
+
+## Attribution and third-party licenses
+
+This project is based on [LeanKeyboard 6.1.31](https://github.com/yuliskov/LeanKeyboard/tree/6.1.31) by Yuriy Liskov and contributors. The fork keeps the upstream source notices and GPL-3.0-only license; it is independently maintained and is not an official LeanKeyboard release.
+
+Some inherited source files are Apache-2.0 licensed, and the voice overlay dependency is MIT licensed. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the included license texts in LICENSES/.

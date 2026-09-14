@@ -288,9 +288,12 @@ public class LeanbackImeService extends KeyMapperImeService {
     @SuppressLint("NewApi")
     @Override
     public boolean onGenericMotionEvent(MotionEvent event) {
-        return isInputViewShown() &&
-                (event.getSource() & InputDevice.SOURCE_TOUCH_NAVIGATION) == InputDevice.SOURCE_TOUCH_NAVIGATION &&
-                mKeyboardController.onGenericMotionEvent(event) || super.onGenericMotionEvent(event);
+        boolean isTouchNavigation = (event.getSource() & InputDevice.SOURCE_TOUCH_NAVIGATION) == InputDevice.SOURCE_TOUCH_NAVIGATION;
+        boolean isJoystick = (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK;
+        if (isInputViewShown() && (isTouchNavigation || isJoystick) && mKeyboardController.onGenericMotionEvent(event)) {
+            return true;
+        }
+        return super.onGenericMotionEvent(event);
     }
 
     public void hideIme() {
@@ -349,8 +352,6 @@ public class LeanbackImeService extends KeyMapperImeService {
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
         if (intent != null) {
-            Log.d(TAG, "onStartCommand: " + intent.toUri(0));
-
             if (intent.getBooleanExtra(COMMAND_RESTART, false)) {
                 Log.d(TAG, "onStartCommand: trying to restart service");
 

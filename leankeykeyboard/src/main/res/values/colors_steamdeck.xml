@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="keyboard_background_steamdeck">#ff191e24</color>
+    <color name="candidate_background_steamdeck">#ff252d35</color>
+    <color name="candidate_font_color_steamdeck">#ff9fe6c5</color>
+    <color name="enter_key_font_color_steamdeck">#ff9fe6c5</color>
+    <color name="key_text_default_steamdeck">#fff0f3f4</color>
+</resources>

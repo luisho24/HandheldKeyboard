@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="keyboard_sound_settings">Sonidos del teclado</string>
+    <string name="keyboard_sound_settings_desc">Elige el sonido y el volumen para desplazarte y usar las teclas.</string>
+    <string name="keyboard_sound_enabled">Activar sonidos del teclado</string>
+    <string name="keyboard_sound_enabled_desc">Reproduce efectos breves al moverte y escribir. Está desactivado de forma predeterminada.</string>
+    <string name="keyboard_sound_style">Estilo de sonido</string>
+    <string name="keyboard_sound_style_soft">Suave</string>
+    <string name="keyboard_sound_style_arcade">Arcade</string>
+    <string name="keyboard_sound_style_glass">Cristal</string>
+    <string name="keyboard_sound_style_mechanical">Mecánico</string>
+    <string name="keyboard_sound_volume">Volumen del sonido</string>
+    <string name="keyboard_sound_navigation">Sonido de navegación</string>
+    <string name="keyboard_sound_confirm">Sonido al confirmar una tecla</string>
+    <string name="keyboard_sound_delete">Sonido al borrar</string>
+    <string name="keyboard_sound_shift">Sonido de Mayús y Bloq Mayús</string>
+    <string name="keyboard_sound_preview">Probar el sonido de confirmación</string>
+    <string name="keyboard_sound_volume_dialog">Volumen de los sonidos del teclado</string>
+    <string name="keyboard_sound_save">Guardar</string>
+    <string-array name="keyboard_sound_choices">
+        <item>Usar el estilo seleccionado</item>
+        <item>Toque simple</item>
+        <item>Toque doble</item>
+        <item>Campanilla</item>
+        <item>Pitido arcade</item>
+        <item>Silencio</item>
+    </string-array>
+</resources>
