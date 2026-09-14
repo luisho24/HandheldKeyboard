@@ -78,4 +78,7 @@
     <string name="custom_theme_image_saved">Background image saved</string>
     <string name="custom_theme_image_error">Could not use this image. Choose a readable image up to 20 MB.</string>
     <string name="custom_theme_image_removed">Background image removed</string>
+    <string name="keyboardview_keycode_emoji">Emoji</string>
+    <string name="keyboardview_keycode_textmoji">Textmoji</string>
+    <string name="keyboardview_keycode_return_to_keyboard">Return to keyboard</string>
 </resources>

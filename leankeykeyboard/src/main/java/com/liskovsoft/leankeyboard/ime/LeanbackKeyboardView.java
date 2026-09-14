@@ -52,6 +52,9 @@ public class LeanbackKeyboardView extends FrameLayout {
     public static final int KEYCODE_LANG_TOGGLE = -9;
     public static final int KEYCODE_CLIPBOARD = -10;
     public static final int KEYCODE_SETTINGS = -11;
+    public static final int KEYCODE_EMOJI_TOGGLE = -12;
+    public static final int KEYCODE_TEXTMOJI_TOGGLE = -13;
+    public static final int KEYCODE_CUSTOM_TEXT_BASE = 100000;
     public static final int NOT_A_KEY = -1;
     public static final int SHIFT_LOCKED = 2;
     public static final int SHIFT_OFF = 0;
@@ -163,6 +166,13 @@ public class LeanbackKeyboardView extends FrameLayout {
     }
 
     private void adjustCase(KeyHolder keyHolder) {
+        if (keyHolder.key.codes != null && keyHolder.key.codes.length > 0 &&
+                keyHolder.key.codes[0] >= KEYCODE_CUSTOM_TEXT_BASE) {
+            mConverter.init(keyHolder);
+            keyHolder.key.label = keyHolder.key.text;
+            return;
+        }
+
         boolean flag = keyHolder.isInMiniKb && keyHolder.isInvertible;
 
         // ^ equals to !=
@@ -259,6 +269,12 @@ public class LeanbackKeyboardView extends FrameLayout {
             } else {
                 paint.setTextSize((float) mKeyTextSize);
                 paint.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+            }
+
+            float availableTextWidth = key.width - padding.left - padding.right - keyInset * 2;
+            float measuredTextWidth = paint.measureText(label);
+            if (measuredTextWidth > availableTextWidth && measuredTextWidth > 0) {
+                paint.setTextSize(paint.getTextSize() * availableTextWidth / measuredTextWidth);
             }
 
             canvas.drawText(

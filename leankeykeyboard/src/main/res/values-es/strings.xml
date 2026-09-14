@@ -78,4 +78,7 @@
     <string name="custom_theme_image_saved">Imagen de fondo guardada</string>
     <string name="custom_theme_image_error">No se pudo usar esta imagen. Elige una imagen accesible de hasta 20 MB.</string>
     <string name="custom_theme_image_removed">Imagen de fondo eliminada</string>
+    <string name="keyboardview_keycode_emoji">Emojis</string>
+    <string name="keyboardview_keycode_textmoji">Kaomojis</string>
+    <string name="keyboardview_keycode_return_to_keyboard">Volver al teclado</string>
 </resources>

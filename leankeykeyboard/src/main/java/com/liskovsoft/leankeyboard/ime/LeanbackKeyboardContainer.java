@@ -58,8 +58,10 @@ import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
 import com.liskovsoft.leankeykeyboard.R;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class LeanbackKeyboardContainer {
     private static final boolean DEBUG = false;
@@ -71,6 +73,11 @@ public class LeanbackKeyboardContainer {
     protected static final float PHYSICAL_HEIGHT_CM = 5.0F;
     protected static final float PHYSICAL_WIDTH_CM = 12.0F;
     private static final String TAG = "LbKbContainer";
+    private static final int HANDHELD_MODE_ALPHA = 0;
+    private static final int HANDHELD_MODE_SYMBOLS = 1;
+    private static final int HANDHELD_MODE_EMOJI = 2;
+    private static final int HANDHELD_MODE_TEXTMOJI = 3;
+    private static final String HANDHELD_PACKAGE = "com.handheldkeyboard.ime";
     public static final double TOUCH_MOVE_MIN_DISTANCE = 0.1D;
     public static final int TOUCH_STATE_CLICK = 3;
     public static final int TOUCH_STATE_NO_TOUCH = 0;
@@ -99,6 +106,9 @@ public class LeanbackKeyboardContainer {
     private int mEnterKeyTextResId;
     private boolean mEscapeNorthEnabled;
     private Keyboard mInitialMainKeyboard;
+    private Keyboard mEmojiKeyboard;
+    private Keyboard mTextmojiKeyboard;
+    private int mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
     private KeyboardManager mKeyboardManager;
     private View mKeyboardsContainer;
     private LeanbackKeyboardView mMainKeyboardView;
@@ -994,10 +1004,73 @@ public class LeanbackKeyboardContainer {
 
     public void onModeChangeClick() {
         dismissMiniKeyboard();
-        if (mMainKeyboardView.getKeyboard().equals(mSymKeyboard)) {
+        if (isHandheldIme() && (mHandheldKeyboardMode == HANDHELD_MODE_EMOJI ||
+                mHandheldKeyboardMode == HANDHELD_MODE_TEXTMOJI)) {
             mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
+            mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
+        } else if (mMainKeyboardView.getKeyboard().equals(mSymKeyboard)) {
+            mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
+            mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
         } else {
             mMainKeyboardView.setKeyboard(mSymKeyboard);
+            mHandheldKeyboardMode = HANDHELD_MODE_SYMBOLS;
+        }
+    }
+
+    public void onEmojiClick() {
+        if (!isHandheldIme()) {
+            return;
+        }
+        dismissMiniKeyboard();
+        if (mEmojiKeyboard == null) {
+            mEmojiKeyboard = new Keyboard(mContext, R.xml.handheld_emoji);
+            fillHandheldRows(mEmojiKeyboard, mEmojiKeyboard.getMinWidth());
+        }
+        mMainKeyboardView.setKeyboard(mEmojiKeyboard);
+        mHandheldKeyboardMode = HANDHELD_MODE_EMOJI;
+    }
+
+    public void onTextmojiClick() {
+        if (!isHandheldIme()) {
+            return;
+        }
+        dismissMiniKeyboard();
+        if (mTextmojiKeyboard == null) {
+            mTextmojiKeyboard = new Keyboard(mContext, R.xml.handheld_textmoji);
+            fillHandheldRows(mTextmojiKeyboard, mTextmojiKeyboard.getMinWidth());
+        }
+        mMainKeyboardView.setKeyboard(mTextmojiKeyboard);
+        mHandheldKeyboardMode = HANDHELD_MODE_TEXTMOJI;
+    }
+
+    private boolean isHandheldIme() {
+        return HANDHELD_PACKAGE.equals(mContext.getPackageName());
+    }
+
+    private void fillHandheldRows(Keyboard keyboard, int targetWidth) {
+        Map<Integer, int[]> rowBounds = new HashMap<>();
+        for (Key key : keyboard.getKeys()) {
+            int[] bounds = rowBounds.get(key.y);
+            if (bounds == null) {
+                bounds = new int[]{key.x, key.x + key.width};
+                rowBounds.put(key.y, bounds);
+            } else {
+                bounds[0] = Math.min(bounds[0], key.x);
+                bounds[1] = Math.max(bounds[1], key.x + key.width);
+            }
+        }
+
+        for (Key key : keyboard.getKeys()) {
+            int[] bounds = rowBounds.get(key.y);
+            int rowWidth = bounds[1] - bounds[0];
+            if (rowWidth <= 0 || rowWidth >= targetWidth) {
+                continue;
+            }
+
+            float scale = (float) targetWidth / rowWidth;
+            key.x = bounds[0] + Math.round((key.x - bounds[0]) * scale);
+            key.width = Math.round(key.width * scale);
+            key.gap = Math.round(key.gap * scale);
         }
     }
 
@@ -1065,6 +1138,7 @@ public class LeanbackKeyboardContainer {
 
         mKeyboardsContainer.setLayoutParams(params);
         mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
+        mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
         mVoiceButtonView.setMicEnabled(mVoiceEnabled);
         resetVoice();
         dismissMiniKeyboard();
@@ -1287,6 +1361,7 @@ public class LeanbackKeyboardContainer {
             mInitialMainKeyboard = nextKeyboard.abcKeyboard;
             mAbcKeyboard = nextKeyboard.abcKeyboard;
             mMainKeyboardView.setKeyboard(nextKeyboard.abcKeyboard);
+            mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
 
             mSymKeyboard = nextKeyboard.symKeyboard;
             mNumKeyboard = nextKeyboard.numKeyboard;
@@ -1299,6 +1374,7 @@ public class LeanbackKeyboardContainer {
         mInitialMainKeyboard = keyboard.abcKeyboard;
         mAbcKeyboard = keyboard.abcKeyboard;
         mMainKeyboardView.setKeyboard(keyboard.abcKeyboard);
+        mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
 
         mSymKeyboard = keyboard.symKeyboard;
         mNumKeyboard = keyboard.numKeyboard;

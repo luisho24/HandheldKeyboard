@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard android:keyWidth="@dimen/key_width" android:keyHeight="@dimen/key_height" android:horizontalGap="@dimen/keyboard_horizontal_gap" android:verticalGap="@dimen/keyboard_vertical_gap"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <Row>
+        <Key android:codes="100000" android:keyLabel="(＾▽＾)" android:keyEdgeFlags="left" />
+        <Key android:codes="100001" android:keyLabel="(≧▽≦)" />
+        <Key android:codes="100002" android:keyLabel="(⌒‿⌒)" />
+        <Key android:codes="100003" android:keyLabel="(◕‿◕)" />
+        <Key android:codes="100004" android:keyLabel="(✿◠‿◠)" />
+        <Key android:codes="100005" android:keyLabel="♥‿♥" />
+        <Key android:codes="100006" android:keyLabel="♡︶♡" />
+        <Key android:codes="100007" android:keyLabel="づ◕‿◕づ" />
+        <Key android:codes="100008" android:keyLabel="˘ω˘" />
+        <Key android:codes="100009" android:keyLabel="&gt;ᴗ&lt;" />
+        <Key android:codes="100010" android:keyLabel="•̀ᴗ•́" android:keyEdgeFlags="right" />
+    </Row>
+    <Row>
+        <Key android:codes="100011" android:keyLabel="(✧ω✧)" android:keyEdgeFlags="left" />
+        <Key android:codes="100012" android:keyLabel="(ᵔᴥᵔ)" />
+        <Key android:codes="100013" android:keyLabel="^･ω･^" />
+        <Key android:codes="100014" android:keyLabel="^‥^" />
+        <Key android:codes="100015" android:keyLabel="TェT" />
+        <Key android:codes="100016" android:keyLabel="｀ω´" />
+        <Key android:codes="100017" android:keyLabel="¯\_(ツ)_/¯" />
+        <Key android:codes="100018" android:keyLabel="ಠ益ಠ" />
+        <Key android:codes="100019" android:keyLabel="┬─┬" />
+        <Key android:codes="100020" android:keyLabel="┻━┻" />
+        <Key android:codes="100021" android:keyLabel="ง'̀-'́ง" android:keyEdgeFlags="right" />
+    </Row>
+    <Row>
+        <Key android:codes="100022" android:keyLabel="•̀_•́" android:keyEdgeFlags="left" />
+        <Key android:codes="100023" android:keyLabel="☞ヮ☞" />
+        <Key android:codes="100024" android:keyLabel="☜ヮ☜" />
+        <Key android:codes="100025" android:keyLabel="(⌐■_■)" />
+        <Key android:codes="100026" android:keyLabel="(¬‿¬)" />
+        <Key android:codes="100027" android:keyLabel="(¬_¬)" />
+        <Key android:codes="100028" android:keyLabel="(￣▽￣)" />
+        <Key android:codes="100029" android:keyLabel="(￣へ￣)" />
+        <Key android:codes="100030" android:keyLabel="一_一" />
+        <Key android:codes="100031" android:keyLabel="(・ω・)" />
+        <Key android:codes="100032" android:keyLabel="･ω･" android:keyEdgeFlags="right" />
+    </Row>
+    <Row>
+        <Key android:codes="100033" android:keyLabel="(ಥ﹏ಥ)" android:keyEdgeFlags="left" />
+        <Key android:codes="100034" android:keyLabel="(╥﹏╥)" />
+        <Key android:codes="100035" android:keyLabel="•́︿•̀" />
+        <Key android:codes="100036" android:keyLabel="(T_T)" />
+        <Key android:codes="100037" android:keyLabel="(ಥ_ಥ)" />
+        <Key android:codes="100038" android:keyLabel="(☉_☉)" />
+        <Key android:codes="100039" android:keyLabel="(°ロ°)!" />
+        <Key android:codes="100040" android:keyLabel="(⊙_⊙)" />
+        <Key android:codes="100041" android:keyLabel="•̀ᴗ•́" />
+        <Key android:codes="100042" android:keyLabel="づ￣³￣づ" />
+        <Key android:codes="100043" android:keyLabel="ಠ‿ಠ" android:keyEdgeFlags="right" />
+    </Row>
+    <Row android:rowEdgeFlags="bottom">
+        <Key android:codes="-2" android:keyEdgeFlags="left" android:keyLabel="@string/keyboardview_keycode_return_to_keyboard" android:keyIcon="@drawable/ic_ime_alphabet" />
+        <Key android:codes="-9" android:keyLabel="@string/keyboardview_keycode_lang" android:keyIcon="@drawable/ic_ime_world" />
+        <Key android:codes="-11" android:keyLabel="@string/keyboardview_keycode_settings" android:keyIcon="@drawable/ic_ime_settings" />
+        <Key android:codes="-5" android:keyLabel="@string/keyboardview_keycode_delete" android:keyIcon="@drawable/ic_ime_delete" />
+        <Key android:codes="32" android:keyLabel="@string/keyboardview_keycode_space" android:keyIcon="@drawable/ic_ime_space" android:keyWidth="@dimen/space_key_width" />
+        <Key android:codes="-12" android:keyLabel="@string/keyboardview_keycode_emoji" />
+        <Key android:codes="-3" android:keyLabel="@string/keyboardview_keycode_left" android:keyIcon="@drawable/ic_ime_left_arrow" />
+        <Key android:codes="-4" android:keyEdgeFlags="right" android:keyLabel="@string/keyboardview_keycode_right" android:keyIcon="@drawable/ic_ime_right_arrow" />
+    </Row>
+</Keyboard>

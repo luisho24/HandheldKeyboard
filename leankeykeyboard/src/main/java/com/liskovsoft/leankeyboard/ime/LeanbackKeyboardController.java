@@ -327,6 +327,12 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
 
                 mContainer.onModeChangeClick();
                 return;
+            case LeanbackKeyboardView.KEYCODE_EMOJI_TOGGLE:
+                mContainer.onEmojiClick();
+                return;
+            case LeanbackKeyboardView.KEYCODE_TEXTMOJI_TOGGLE:
+                mContainer.onTextmojiClick();
+                return;
             case LeanbackKeyboardView.KEYCODE_SHIFT:
                 if (Log.isLoggable("LbKbController", Log.DEBUG)) {
                     Log.d("LbKbController", "shift");

@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import androidx.core.text.BidiFormatter;
 import com.liskovsoft.leankeyboard.ime.LeanbackKeyboardController.InputListener;
 import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
 
@@ -151,68 +150,12 @@ public class LeanbackImeService extends KeyMapperImeService {
                     break;
                 case InputListener.ENTRY_TYPE_LEFT:
                 case InputListener.ENTRY_TYPE_RIGHT:
-                    BidiFormatter formatter = BidiFormatter.getInstance();
-
-                    CharSequence textBeforeCursor = connection.getTextBeforeCursor(1000, 0);
-                    int lenBefore = 0;
-                    boolean isRtlBefore = false;
-                    //int rtlLenBefore = 0;
-                    if (textBeforeCursor != null) {
-                        lenBefore = textBeforeCursor.length();
-                        isRtlBefore = formatter.isRtl(textBeforeCursor);
-                        //rtlLenBefore = LeanbackUtils.getRtlLenBeforeCursor(textBeforeCursor);
-                    }
-
-                    CharSequence textAfterCursor = connection.getTextAfterCursor(1000, 0);
-                    int lenAfter = 0;
-                    //int rtlLenAfter = 0;
-                    boolean isRtlAfter = false;
-                    if (textAfterCursor != null) {
-                        lenAfter = textAfterCursor.length();
-                        isRtlAfter = formatter.isRtl(textAfterCursor);
-                        //rtlLenAfter = LeanbackUtils.getRtlLenAfterCursor(textAfterCursor);
-                    }
-
-                    int index = lenBefore;
-                    if (type == InputListener.ENTRY_TYPE_LEFT) {
-                        if (lenBefore > 0) {
-                            if (!isRtlBefore) {
-                                index = lenBefore - 1;
-                            } else {
-                                if (lenAfter == 0) {
-                                    index = 1;
-                                } else if (lenAfter == 1) {
-                                    index = 0;
-                                } else {
-                                    index = lenBefore + 1;
-                                }
-                            }
-                        }
-
-                        //Log.d(TAG, String.format("direction key: before: lenBefore=%s, lenAfter=%s, rtlLenBefore=%s, rtlLenAfter=%s", lenBefore, lenAfter, rtlLenBefore, rtlLenAfter));
-                        Log.d(TAG, String.format("direction key: before: lenBefore=%s, lenAfter=%s, isRtlBefore=%s", lenBefore, lenAfter, isRtlBefore));
-                    } else {
-                        if (lenAfter > 0) {
-                            if (!isRtlAfter) {
-                                index = lenBefore + 1;
-                            } else {
-                                if (lenBefore == 0) {
-                                    index = lenAfter - 1;
-                                } else if (lenBefore == 1) {
-                                    index = lenAfter + 1;
-                                } else {
-                                    index = lenBefore - 1;
-                                }
-                            }
-                        }
-
-                        //Log.d(TAG, String.format("direction key: after: lenBefore=%s, lenAfter=%s, rtlLenBefore=%s, rtlLenAfter=%s", lenBefore, lenAfter, rtlLenBefore, rtlLenAfter));
-                        Log.d(TAG, String.format("direction key: after: lenBefore=%s, lenAfter=%s, isRtlAfter=%s", lenBefore, lenAfter, isRtlAfter));
-                    }
-
-                    Log.d(TAG, "direction key: index: " + index);
-
-                    connection.setSelection(index, index);
+                    // Let the focused editor move its own caret. It knows the actual
+                    // selection offset and visual bidi order, and can keep surrogate
+                    // pairs/emoji together. Reconstructing an absolute index from a
+                    // truncated before/after text window breaks for long and RTL text.
+                    sendDownUpKeyEvents(type == InputListener.ENTRY_TYPE_LEFT
+                            ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT);
                     updateSuggestions = true;
                     break;
                 case InputListener.ENTRY_TYPE_DISMISS:

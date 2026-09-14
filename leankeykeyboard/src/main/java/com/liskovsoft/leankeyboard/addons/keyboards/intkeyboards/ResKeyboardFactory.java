@@ -122,36 +122,29 @@ public class ResKeyboardFactory implements KeyboardFactory {
         return keyboard;
     }
 
-    /** The handheld keyboard keeps voice assist on supported controllers, but does not
-     * show an on-screen microphone key that often has no recognizer configured. */
+    /** Reuse the unused on-screen microphone slot for a local emoji picker. */
     private void removeHandheldVoiceKey(Keyboard keyboard) {
         if (!HANDHELD_PACKAGE.equals(mContext.getPackageName())) {
             return;
         }
 
-        Key voiceKey = null;
-        Key spaceKey = null;
         for (Key key : keyboard.getKeys()) {
             if (key.codes == null || key.codes.length == 0) {
                 continue;
             }
             if (key.codes[0] == LeanbackKeyboardView.KEYCODE_VOICE) {
-                voiceKey = key;
-            } else if (key.codes[0] == LeanbackKeyboardView.ASCII_SPACE) {
-                spaceKey = key;
+                key.codes = new int[]{LeanbackKeyboardView.KEYCODE_EMOJI_TOGGLE};
+                key.label = "😊";
+                key.text = key.label;
+                key.icon = null;
+                key.popupCharacters = null;
+                break;
             }
         }
 
-        if (voiceKey != null) {
-            // Reuse the microphone slot for Space, then widen the shorter rows to
-            // the keyboard's full row width. This keeps the view's measured width in
-            // sync with the key geometry and removes the unused strip at the right.
-            if (spaceKey != null && spaceKey.y == voiceKey.y) {
-                spaceKey.width += voiceKey.width + voiceKey.gap;
-            }
-            keyboard.getKeys().remove(voiceKey);
-            fillHandheldRows(keyboard, keyboard.getMinWidth());
-        }
+        // Preserve the voice key's slot so the spacebar retains its normal width and
+        // all rows continue to span the same full-width handheld layout.
+        fillHandheldRows(keyboard, keyboard.getMinWidth());
     }
 
     private void fillHandheldRows(Keyboard keyboard, int targetWidth) {

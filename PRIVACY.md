@@ -1,6 +1,6 @@
 # Privacy
 
-This note describes the Handheld Keyboard source and v0.4.1 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
+This note describes the Handheld Keyboard source and v0.4.3 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
 
 ## What the keyboard does with text
 
@@ -8,7 +8,7 @@ An input method must receive key events and send entered characters to the curre
 
 The app's handheld manifest does not request the Android INTERNET permission. The source has no app-controlled network client, analytics, crash-reporting service, or developer-operated upload endpoint. No typed text, theme image, or keyboard setting is uploaded by this project's code.
 
-Keyboard settings and imported theme images are stored on the device. Theme images are copied into the app's private storage; the app does not sync them to a server.
+Keyboard settings, emoji/textmoji selections, and imported theme images are handled on the device. Emoji and textmoji are bundled keyboard labels inserted directly into the focused app. Theme images are copied into the app's private storage; the app does not sync them to a server.
 
 ## Optional voice input
 
