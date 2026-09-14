@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:focusable="false">
+
+    <LinearLayout
+        android:id="@+id/handheld_keyboard_row"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:clipChildren="false"
+        android:gravity="bottom"
+        android:orientation="horizontal">
+
+        <com.liskovsoft.leankeyboard.addons.resize.ResizeableLeanbackKeyboardView
+            android:id="@+id/main_keyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            xmlns:leanbackime="http://schemas.android.com/apk/res-auto"
+            leanbackime:rowCount="5"
+            leanbackime:columnCount="11" />
+
+        <Button
+            android:id="@+id/enter"
+            android:layout_width="@dimen/handheld_action_key_width"
+            android:layout_height="@dimen/handheld_action_key_height"
+            android:layout_gravity="bottom"
+            android:layout_marginLeft="@dimen/handheld_action_key_spacing"
+            android:background="@android:color/transparent"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:maxLines="2"
+            android:minWidth="@dimen/handheld_action_key_width"
+            android:paddingLeft="@dimen/handheld_action_key_padding"
+            android:paddingRight="@dimen/handheld_action_key_padding"
+            android:text="@string/label_next_key"
+            android:textColor="@color/enter_key_font_color"
+            android:textSize="@dimen/enter_key_font_size" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/handheld_keyboard_row"
+        android:layout_alignBottom="@id/handheld_keyboard_row">
+
+        <com.liskovsoft.leankeyboard.ime.voice.RecognizerView
+            android:id="@+id/voice"
+            android:layout_width="@dimen/recognizer_size"
+            android:layout_height="@dimen/recognizer_size"
+            android:layout_gravity="center"
+            android:visibility="invisible" />
+    </FrameLayout>
+</RelativeLayout>

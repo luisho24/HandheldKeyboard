@@ -9,6 +9,10 @@
 
 # Add any project specific keep options here:
 
+# These handheld-only guided screens are loaded by name from the shared settings list.
+-keep class com.liskovsoft.leankeyboard.fragments.settings.HandheldKeyboardSettingsFragment { public <init>(); }
+-keep class com.liskovsoft.leankeyboard.fragments.settings.HandheldAboutFragment { public <init>(); }
+
 # If your project uses WebView with JS, uncomment the following
 # and specify the fully qualified class name to the JavaScript interface
 # class:

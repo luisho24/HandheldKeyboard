@@ -194,6 +194,12 @@ public class ThemeManager {
         Button enterButton = mRootView.findViewById(R.id.enter);
         if (enterButton != null) {
             enterButton.setTextColor(enterFontColor);
+            if ("com.handheldkeyboard.ime".equals(mContext.getPackageName())) {
+                // The handheld editor action is part of the key row, so give it
+                // the same surface language as the other keys.
+                int actionSurface = withAlpha(keyBackgroundColor, getSurfaceAlpha());
+                enterButton.setBackgroundDrawable(createSurfaceDrawable(actionSurface, 10));
+            }
         }
 
         LeanbackKeyboardView keyboardView = mRootView.findViewById(R.id.main_keyboard);

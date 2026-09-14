@@ -56,24 +56,10 @@ public final class HandheldDisplayProfiles {
     }
 
     public static float widthFraction(String profile, boolean portrait, boolean floating) {
-        float fraction;
-        if (portrait) {
-            fraction = SQUARE.equals(profile) ? 0.94f : 0.97f;
-        } else if (ULTRAWIDE.equals(profile)) {
-            fraction = 0.66f;
-        } else if (SIXTEEN_TEN.equals(profile)) {
-            fraction = 0.80f;
-        } else if (SIXTEEN_NINE.equals(profile)) {
-            fraction = 0.74f;
-        } else if (FOUR_THREE.equals(profile)) {
-            fraction = 0.90f;
-        } else {
-            fraction = 0.94f;
-        }
-
-        if (floating) {
-            fraction *= portrait ? 0.87f : 0.91f;
-        }
-        return fraction;
+        // Handheld landscape is the primary mode: keep key spacing comfortable
+        // while filling nearly the entire panel. Profile selection still controls
+        // the default height and floating mode keeps a clear inset around the card.
+        float fraction = portrait ? 0.97f : 0.97f;
+        return floating ? fraction * (portrait ? 0.87f : 0.91f) : fraction;
     }
 }

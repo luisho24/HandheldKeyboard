@@ -31,16 +31,30 @@ public class KbSettingsFragment extends BaseSettingsFragment {
             });
         }
 
-        addNextAction(R.string.change_layout, () -> startGuidedFragment(new KbLayoutFragment()));
-
-        addNextAction(R.string.change_theme, () -> startGuidedFragment(new KbThemeFragment()));
-
-        addNextAction(R.string.keyboard_sound_settings,
-                () -> startGuidedFragment(new KeyboardSoundSettingsFragment()));
-
-        addNextAction(R.string.misc, () -> startGuidedFragment(new MiscFragment()));
-
-        addNextAction(R.string.about_desc, () -> startGuidedFragment(new AboutFragment()));
+        if ("com.handheldkeyboard.ime".equals(context.getPackageName())) {
+            addNextAction(R.string.handheld_settings_appearance,
+                    R.string.handheld_settings_appearance_desc,
+                    () -> startGuidedFragment(new KbThemeFragment()));
+            addNextAction(R.string.handheld_settings_keyboard,
+                    R.string.handheld_settings_keyboard_desc,
+                    this::startHandheldKeyboardSettingsFragment);
+            addNextAction(R.string.handheld_settings_feedback,
+                    R.string.handheld_settings_feedback_desc,
+                    () -> startGuidedFragment(new KeyboardSoundSettingsFragment()));
+            addNextAction(R.string.handheld_settings_about,
+                    R.string.handheld_settings_about_desc,
+                    this::startHandheldAboutFragment);
+            addNextAction(R.string.handheld_settings_more,
+                    R.string.handheld_settings_more_desc,
+                    () -> startGuidedFragment(new MiscFragment()));
+        } else {
+            addNextAction(R.string.change_layout, () -> startGuidedFragment(new KbLayoutFragment()));
+            addNextAction(R.string.change_theme, () -> startGuidedFragment(new KbThemeFragment()));
+            addNextAction(R.string.keyboard_sound_settings,
+                    () -> startGuidedFragment(new KeyboardSoundSettingsFragment()));
+            addNextAction(R.string.misc, () -> startGuidedFragment(new MiscFragment()));
+            addNextAction(R.string.about_desc, () -> startGuidedFragment(new AboutFragment()));
+        }
     }
 
     @NonNull
@@ -61,6 +75,28 @@ public class KbSettingsFragment extends BaseSettingsFragment {
     private void startGuidedFragment(GuidedStepSupportFragment fragment) {
         if (getFragmentManager() != null) {
             GuidedStepSupportFragment.add(getFragmentManager(), fragment);
+        }
+    }
+
+    private void startHandheldKeyboardSettingsFragment() {
+        startHandheldFragment("com.liskovsoft.leankeyboard.fragments.settings.HandheldKeyboardSettingsFragment",
+                new KbLayoutFragment());
+    }
+
+    private void startHandheldAboutFragment() {
+        startHandheldFragment("com.liskovsoft.leankeyboard.fragments.settings.HandheldAboutFragment",
+                new AboutFragment());
+    }
+
+    private void startHandheldFragment(String className, GuidedStepSupportFragment fallback) {
+        try {
+            Class<?> fragmentClass = Class.forName(className);
+            GuidedStepSupportFragment fragment = (GuidedStepSupportFragment)
+                    fragmentClass.getDeclaredConstructor().newInstance();
+            startGuidedFragment(fragment);
+        } catch (ReflectiveOperationException e) {
+            // Keep the shared app variants resilient if this handheld-only screen is absent.
+            startGuidedFragment(fallback);
         }
     }
 }

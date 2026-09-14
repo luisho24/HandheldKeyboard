@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="handheld_settings_appearance">Theme &amp; appearance</string>
+    <string name="handheld_settings_appearance_desc">Choose light, dark, or system colors; customize palettes, backgrounds, and keyboard surfaces.</string>
+    <string name="handheld_settings_keyboard">Keyboard layout &amp; size</string>
+    <string name="handheld_settings_keyboard_desc">Choose languages, a screen profile, keyboard height, and floating placement.</string>
+    <string name="handheld_settings_feedback">Sounds &amp; feedback</string>
+    <string name="handheld_settings_feedback_desc">Set navigation, typing, delete, and shift sounds and their volume.</string>
+    <string name="handheld_settings_about">About &amp; privacy</string>
+    <string name="handheld_settings_about_desc">Check app details, releases, and privacy information.</string>
+    <string name="handheld_settings_more">More preferences</string>
+    <string name="handheld_settings_more_desc">Suggestions, screen behavior, navigation, and other options.</string>
+    <string name="handheld_privacy_policy">Privacy notes</string>
+    <string name="handheld_privacy_policy_desc">How text, settings, images, and optional speech recognition are handled.</string>
+    <string name="handheld_source_code">Source code</string>
+    <string name="handheld_source_code_desc">Browse the public, AI-assisted project source and documentation.</string>
+    <string name="handheld_releases">Releases</string>
+    <string name="handheld_releases_desc">Download published app builds and review their notes.</string>
+    <string name="handheld_about_version_desc">Version installed on this device.</string>
+</resources>

@@ -1,6 +1,6 @@
 # Privacy
 
-This note describes the Handheld Keyboard source and v0.4.0 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
+This note describes the Handheld Keyboard source and v0.4.1 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
 
 ## What the keyboard does with text
 
@@ -12,7 +12,7 @@ Keyboard settings and imported theme images are stored on the device. Theme imag
 
 ## Optional voice input
 
-Voice typing is optional and starts only when the user activates the microphone key and grants microphone access. It delegates recognition to Android's installed speech-recognition provider. That provider may process audio off-device under its own privacy policy and network behavior; the keyboard does not control those services. If you require voice input to remain entirely on-device, use a device/provider configured for offline recognition or leave voice input disabled.
+The handheld keyboard no longer displays an on-screen microphone key. Voice input may still be invoked through a supported system/controller voice-assist key; when used, it requires microphone access and delegates recognition to Android's installed speech-recognition provider. That provider may process audio off-device under its own privacy policy and network behavior; the keyboard does not control those services. If you require voice input to remain entirely on-device, use a device/provider configured for offline recognition or do not use voice assist.
 
 ## AI
 

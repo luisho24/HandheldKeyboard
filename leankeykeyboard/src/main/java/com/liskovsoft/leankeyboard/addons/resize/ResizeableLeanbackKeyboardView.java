@@ -12,6 +12,7 @@ import android.view.WindowManager;
 import com.liskovsoft.leankeyboard.ime.LeanbackKeyboardView;
 import com.liskovsoft.leankeyboard.utils.KeyboardLayoutPreferences;
 import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
+import com.liskovsoft.leankeykeyboard.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -108,7 +109,21 @@ public class ResizeableLeanbackKeyboardView extends LeanbackKeyboardView {
         // The editor action occupies its own lane beside the keyboard in landscape.
         float widthBudget = availableWidth * widthFraction;
         float heightBudget = availableHeight * heightPercent / 100.0f;
-        float widthFactor = widthBudget / Math.max(1, getKeyboardContentWidth(keyboard));
+        float keyboardWidth = Math.max(1, getKeyboardContentWidth(keyboard));
+        float widthFactor;
+        if (HANDHELD_PACKAGE.equals(getContext().getPackageName())) {
+            float actionSpacing = getResources().getDimension(R.dimen.handheld_action_key_spacing);
+            float minimumActionWidth = getResources().getDimension(R.dimen.handheld_action_key_width);
+            float actionKeyWidth = getRightArrowWidth(keyboard);
+            float scaledActionWidthFactor = actionKeyWidth * 1.25f;
+            widthFactor = (widthBudget - actionSpacing) /
+                    (keyboardWidth + scaledActionWidthFactor);
+            if (scaledActionWidthFactor * widthFactor < minimumActionWidth) {
+                widthFactor = (widthBudget - actionSpacing - minimumActionWidth) / keyboardWidth;
+            }
+        } else {
+            widthFactor = widthBudget / keyboardWidth;
+        }
         float heightFactor = heightBudget / Math.max(1, getKeyboardContentHeight(keyboard));
 
         mWidthFactor = clamp(widthFactor, 0.72f, 2.9f);
@@ -129,6 +144,16 @@ public class ResizeableLeanbackKeyboardView extends LeanbackKeyboardView {
             contentHeight = Math.max(contentHeight, key.y + key.height);
         }
         return contentHeight > 0 ? contentHeight : keyboard.getHeight();
+    }
+
+    private int getRightArrowWidth(Keyboard keyboard) {
+        for (Key key : keyboard.getKeys()) {
+            if (key.codes != null && key.codes.length > 0 &&
+                    key.codes[0] == LeanbackKeyboardView.KEYCODE_RIGHT) {
+                return key.width;
+            }
+        }
+        return Math.round(getResources().getDimension(R.dimen.key_width));
     }
 
     private float clamp(float value, float minimum, float maximum) {

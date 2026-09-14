@@ -22,6 +22,7 @@ import android.speech.SpeechRecognizer;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
@@ -780,12 +781,19 @@ public class LeanbackKeyboardContainer {
             default:
                 break;
             case KeyFocus.TYPE_ACTION:
-                offsetRect(mRect, mMainKeyboardView);
                 if ((direction & DIRECTION_LEFT) != 0) {
-                    return getBestFocus((float) mRect.right, null, nextFocus);
+                    Rect actionRect = new Rect();
+                    offsetRect(actionRect, mActionButtonView);
+                    offsetRect(mRect, mMainKeyboardView);
+                    // Use the action key's row when returning to the grid. Reusing
+                    // the previous pointer Y could send focus to the top-right `@`
+                    // key instead of the adjacent cursor-right key.
+                    return getBestFocus((float) mRect.right,
+                            (float) actionRect.centerY(), nextFocus);
                 }
 
                 if ((direction & DIRECTION_UP) != 0) {
+                    offsetRect(mRect, mMainKeyboardView);
                     offsetRect(mRect, mSuggestions);
                     return getBestFocus((float) startFocus.rect.centerX(), (float) mRect.centerY(), nextFocus);
                 }
@@ -1067,6 +1075,7 @@ public class LeanbackKeyboardContainer {
             mActionButtonView.setText(mEnterKeyTextResId);
             mActionButtonView.setContentDescription(mContext.getString(mEnterKeyTextResId));
         }
+        sizeHandheldActionKey();
 
         if (mCapCharacters) {
             setShiftState(LeanbackKeyboardView.SHIFT_LOCKED);
@@ -1074,6 +1083,41 @@ public class LeanbackKeyboardContainer {
             setShiftState(LeanbackKeyboardView.SHIFT_OFF);
         } else {
             setShiftState(LeanbackKeyboardView.SHIFT_ON);
+        }
+    }
+
+    /** Size the editor action as the final keycap in the handheld keyboard row. */
+    private void sizeHandheldActionKey() {
+        if (!"com.handheldkeyboard.ime".equals(mContext.getPackageName())) {
+            return;
+        }
+
+        Key rightArrow = null;
+        for (int i = 0; i < mMainKeyboardView.getKeyCount(); i++) {
+            Key key = mMainKeyboardView.getKey(i);
+            if (key != null && key.codes != null && key.codes.length > 0 &&
+                    key.codes[0] == LeanbackKeyboardView.KEYCODE_RIGHT) {
+                rightArrow = key;
+                break;
+            }
+        }
+        if (rightArrow == null) {
+            return;
+        }
+
+        ViewGroup.LayoutParams params = mActionButtonView.getLayoutParams();
+        if (params instanceof LinearLayout.LayoutParams) {
+            LinearLayout.LayoutParams rowParams = (LinearLayout.LayoutParams) params;
+            int baseWidth = mContext.getResources().getDimensionPixelSize(R.dimen.handheld_action_key_width);
+            rowParams.width = Math.max(baseWidth, Math.round(rightArrow.width * 1.25f));
+            rowParams.height = rightArrow.height;
+            rowParams.leftMargin = mContext.getResources().getDimensionPixelSize(R.dimen.handheld_action_key_spacing);
+            mActionButtonView.setLayoutParams(rowParams);
+            int actionTextSize = Math.round(mMainKeyboardView.mKeyTextSize * 0.58f);
+            int minTextSize = Math.round(18 * mContext.getResources().getDisplayMetrics().scaledDensity);
+            int maxTextSize = Math.round(28 * mContext.getResources().getDisplayMetrics().scaledDensity);
+            mActionButtonView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                    Math.max(minTextSize, Math.min(maxTextSize, actionTextSize)));
         }
     }
 

@@ -24,6 +24,7 @@ import java.util.Map;
 
 public class ResKeyboardFactory implements KeyboardFactory {
     private static final String TAG = ResKeyboardFactory.class.getSimpleName();
+    private static final String HANDHELD_PACKAGE = "com.handheldkeyboard.ime";
     private final Context mContext;
     private Map<String, Drawable> mCachedSpace;
 
@@ -116,7 +117,68 @@ public class ResKeyboardFactory implements KeyboardFactory {
             }
         }
 
+        removeHandheldVoiceKey(keyboard);
+
         return keyboard;
+    }
+
+    /** The handheld keyboard keeps voice assist on supported controllers, but does not
+     * show an on-screen microphone key that often has no recognizer configured. */
+    private void removeHandheldVoiceKey(Keyboard keyboard) {
+        if (!HANDHELD_PACKAGE.equals(mContext.getPackageName())) {
+            return;
+        }
+
+        Key voiceKey = null;
+        Key spaceKey = null;
+        for (Key key : keyboard.getKeys()) {
+            if (key.codes == null || key.codes.length == 0) {
+                continue;
+            }
+            if (key.codes[0] == LeanbackKeyboardView.KEYCODE_VOICE) {
+                voiceKey = key;
+            } else if (key.codes[0] == LeanbackKeyboardView.ASCII_SPACE) {
+                spaceKey = key;
+            }
+        }
+
+        if (voiceKey != null) {
+            // Reuse the microphone slot for Space, then widen the shorter rows to
+            // the keyboard's full row width. This keeps the view's measured width in
+            // sync with the key geometry and removes the unused strip at the right.
+            if (spaceKey != null && spaceKey.y == voiceKey.y) {
+                spaceKey.width += voiceKey.width + voiceKey.gap;
+            }
+            keyboard.getKeys().remove(voiceKey);
+            fillHandheldRows(keyboard, keyboard.getMinWidth());
+        }
+    }
+
+    private void fillHandheldRows(Keyboard keyboard, int targetWidth) {
+        Map<Integer, int[]> rowBounds = new HashMap<>();
+        for (Key key : keyboard.getKeys()) {
+            int[] bounds = rowBounds.get(key.y);
+            if (bounds == null) {
+                bounds = new int[]{key.x, key.x + key.width};
+                rowBounds.put(key.y, bounds);
+            } else {
+                bounds[0] = Math.min(bounds[0], key.x);
+                bounds[1] = Math.max(bounds[1], key.x + key.width);
+            }
+        }
+
+        for (Key key : keyboard.getKeys()) {
+            int[] bounds = rowBounds.get(key.y);
+            int rowWidth = bounds[1] - bounds[0];
+            if (rowWidth <= 0 || rowWidth >= targetWidth) {
+                continue;
+            }
+
+            float scale = (float) targetWidth / rowWidth;
+            key.x = bounds[0] + Math.round((key.x - bounds[0]) * scale);
+            key.width = Math.round(key.width * scale);
+            key.gap = Math.round(key.gap * scale);
+        }
     }
 
     private void localizeSpace(Key key, KeyboardInfo info) {

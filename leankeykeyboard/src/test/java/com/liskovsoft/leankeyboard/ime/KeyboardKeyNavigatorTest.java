@@ -21,8 +21,8 @@ public class KeyboardKeyNavigatorTest {
         addKey("symbols", 0, 320, 90, 70);
         addKey("shift", 100, 320, 90, 70);
         addKey("language", 200, 320, 90, 70);
-        addKey("space", 300, 320, 490, 70);
-        addKey("voice", 800, 320, 90, 70);
+        addKey("settings", 300, 320, 90, 70);
+        addKey("space", 400, 320, 490, 70);
         addKey("cursor-left", 900, 320, 90, 70);
         addKey("cursor-right", 1000, 320, 90, 70);
     }
@@ -30,7 +30,9 @@ public class KeyboardKeyNavigatorTest {
     @Test
     public void horizontalNeighborsUseActualKeyBounds() {
         assertMove("4", KeyboardKeyNavigator.Direction.LEFT, "3");
+        assertMove("3", KeyboardKeyNavigator.Direction.RIGHT, "4");
         assertMove("f", KeyboardKeyNavigator.Direction.LEFT, "d");
+        assertMove("d", KeyboardKeyNavigator.Direction.RIGHT, "f");
     }
 
     @Test
@@ -41,20 +43,23 @@ public class KeyboardKeyNavigatorTest {
 
         int fromV = move("v", KeyboardKeyNavigator.Direction.UP);
         assertEquals("f", labels.get(fromV));
-        int fromF = move(fromV, KeyboardKeyNavigator.Direction.UP_LEFT);
-        assertEquals("e", labels.get(fromF));
+        int fromF = move(fromV, KeyboardKeyNavigator.Direction.UP);
+        assertEquals("r", labels.get(fromF));
+        assertEquals("e", labels.get(move(fromF, KeyboardKeyNavigator.Direction.LEFT)));
     }
 
     @Test
     public void cursorArrowKeysCanBeReachedFromOneAnother() {
         assertMove("cursor-left", KeyboardKeyNavigator.Direction.RIGHT, "cursor-right");
         assertMove("cursor-right", KeyboardKeyNavigator.Direction.LEFT, "cursor-left");
+        assertMove("cursor-left", KeyboardKeyNavigator.Direction.LEFT, "space");
     }
 
     @Test
-    public void wideSpaceKeyMovesAlongItsRowBeforeDiagonalLetterRows() {
-        assertMove("space", KeyboardKeyNavigator.Direction.RIGHT, "voice");
-        assertMove("space", KeyboardKeyNavigator.Direction.LEFT, "language");
+    public void handheldBottomRowMatchesTheVoiceFreeKeyboardLayout() {
+        assertMove("space", KeyboardKeyNavigator.Direction.RIGHT, "cursor-left");
+        assertMove("space", KeyboardKeyNavigator.Direction.LEFT, "settings");
+        assertMove("settings", KeyboardKeyNavigator.Direction.RIGHT, "space");
     }
 
     @Test

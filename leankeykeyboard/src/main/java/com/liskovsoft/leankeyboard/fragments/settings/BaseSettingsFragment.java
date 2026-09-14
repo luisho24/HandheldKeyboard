@@ -88,6 +88,10 @@ public class BaseSettingsFragment extends GuidedStepSupportFragment {
         mNextActions.put(mId++, new NextAction(resId, onClick));
     }
 
+    protected void addNextAction(int titleResId, int descriptionResId, OnClick onClick) {
+        mNextActions.put(mId++, new NextAction(titleResId, descriptionResId, onClick));
+    }
+
     @Override
     public void onCreateActions(@NonNull List<GuidedAction> actions, Bundle savedInstanceState) {
         for (long id : mCheckedActions.keySet()) {
@@ -119,6 +123,9 @@ public class BaseSettingsFragment extends GuidedStepSupportFragment {
                 .id(id)
                 .hasNext(true)
                 .title(nextAction.getResId()).build();
+        if (nextAction.getDescriptionResId() != 0) {
+            action.setDescription(getString(nextAction.getDescriptionResId()));
+        }
         actions.add(action);
     }
 
@@ -204,16 +211,26 @@ public class BaseSettingsFragment extends GuidedStepSupportFragment {
     }
 
     private static class NextAction {
+        private final int mDescriptionResId;
         private final int mResId;
         private final OnClick mOnClick;
 
         public NextAction(int resId, OnClick onClick) {
+            this(resId, 0, onClick);
+        }
+
+        public NextAction(int resId, int descriptionResId, OnClick onClick) {
             mResId = resId;
+            mDescriptionResId = descriptionResId;
             mOnClick = onClick;
         }
 
         public int getResId() {
             return mResId;
+        }
+
+        public int getDescriptionResId() {
+            return mDescriptionResId;
         }
 
         public void onClick() {

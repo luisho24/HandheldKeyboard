@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="handheld_action_key_width">54dp</dimen>
+    <dimen name="handheld_action_key_height">48dp</dimen>
+    <dimen name="handheld_action_key_spacing">8dp</dimen>
+    <dimen name="handheld_action_key_padding">4dp</dimen>
+</resources>
