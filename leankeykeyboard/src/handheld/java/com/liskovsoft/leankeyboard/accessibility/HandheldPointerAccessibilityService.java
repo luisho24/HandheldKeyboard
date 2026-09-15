@@ -44,6 +44,10 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
     private int mScreenWidth;
     private int mScreenHeight;
     private boolean mOverlayAttached;
+    private boolean mDragging;
+    private float mDragX;
+    private float mDragY;
+    private GestureDescription.StrokeDescription mDragStroke;
     private final PointerChord mPointerChord = new PointerChord();
 
     @Override
@@ -112,7 +116,8 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         }
 
         if (keyCode == HandheldPointerPreferences.getClickButton(this)) {
-            if (action == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) tap();
+            if (action == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) beginDrag();
+            if (action == KeyEvent.ACTION_UP) endDrag();
             return true;
         }
         if (keyCode == HandheldPointerPreferences.getBackButton(this)) {
@@ -233,6 +238,7 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
     }
 
     private void hidePointer() {
+        endDrag();
         if (mOverlayAttached && mWindowManager != null && mPointerView != null) {
             mWindowManager.removeViewImmediate(mPointerView);
         }
@@ -256,6 +262,7 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         mCursorX = Math.max(radius, Math.min(mScreenWidth - radius, x));
         mCursorY = Math.max(radius, Math.min(mScreenHeight - radius, y));
         updateWindowPosition();
+        continueDragIfNeeded();
         if (dpad && HandheldPointerPreferences.areAnimationsEnabled(this)) {
             mPointerView.pulse(false);
         }
@@ -267,12 +274,51 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         if (mPointerView != null) mPointerView.invalidate();
     }
 
-    private void tap() {
+    /**
+     * Starts a continuing gesture on button-down. A short press naturally becomes a tap;
+     * every subsequent stick/HAT movement extends the same gesture until button-up.
+     */
+    private void beginDrag() {
+        if (mDragging) return;
         Path path = new Path();
         path.moveTo(mCursorX, mCursorY);
-        GestureDescription gesture = new GestureDescription.Builder()
-                .addStroke(new GestureDescription.StrokeDescription(path, 0, 45)).build();
-        dispatchGesture(gesture, null, null);
+        mDragStroke = new GestureDescription.StrokeDescription(path, 1, 1, true);
+        mDragging = dispatchGesture(new GestureDescription.Builder().addStroke(mDragStroke).build(), null, null);
+        mDragX = mCursorX;
+        mDragY = mCursorY;
+        pulse(true);
+    }
+
+    private void continueDragIfNeeded() {
+        if (!mDragging || mDragStroke == null || (mDragX == mCursorX && mDragY == mCursorY)) return;
+        Path path = new Path();
+        path.moveTo(mDragX, mDragY);
+        path.lineTo(mCursorX, mCursorY);
+        try {
+            mDragStroke = mDragStroke.continueStroke(path, 1, 1, true);
+            if (!dispatchGesture(new GestureDescription.Builder().addStroke(mDragStroke).build(), null, null)) {
+                mDragging = false;
+            }
+        } catch (IllegalArgumentException ignored) {
+            mDragging = false;
+        }
+        mDragX = mCursorX;
+        mDragY = mCursorY;
+    }
+
+    private void endDrag() {
+        if (!mDragging || mDragStroke == null) return;
+        Path path = new Path();
+        path.moveTo(mDragX, mDragY);
+        path.lineTo(mCursorX, mCursorY);
+        try {
+            mDragStroke = mDragStroke.continueStroke(path, 1, 1, false);
+            dispatchGesture(new GestureDescription.Builder().addStroke(mDragStroke).build(), null, null);
+        } catch (IllegalArgumentException ignored) {
+            // A cancelled foreground gesture has already been released by Android.
+        }
+        mDragging = false;
+        mDragStroke = null;
         pulse(true);
     }
 

@@ -78,8 +78,8 @@ android {
         }
         handheld {
             applicationId "com.handheldkeyboard.ime"
-            versionCode 13
-            versionName "0.4.8"
+            versionCode 14
+            versionName "0.4.9"
         }
     }
 }

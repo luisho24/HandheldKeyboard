@@ -23,7 +23,7 @@ A controller-friendly Android keyboard for handheld gaming devices, Android TV, 
 - Insert emoji and textmoji from dedicated, controller-navigable keyboard pages.
 - Preview themes in onboarding and open the reorganized keyboard settings directly from the keyboard.
 - Match the Go, Send, Search, or Done action key to the keyboard theme; the action key sits alongside the cursor controls.
-- Use an optional Android Accessibility pointer: toggle it with a configurable two-button chord (M1 + M4 by default), move it with the D-pad anywhere or the right stick while the keyboard is open, then map click, Back, and scrolling to your preferred controller buttons.
+- Use an optional Android Accessibility pointer: toggle it with a configurable two-button chord (M1 + M4 by default), move it with the D-pad anywhere or the right stick while the keyboard is open, then map click-and-drag, Back, and scrolling to your preferred controller buttons.
 - Theme the cursor from the keyboard focus color or with Mint, Violet, and Amber styles; animate activation, movement, and clicks.
 - Retain LeanKeyboard's language and layout support.
 
@@ -35,11 +35,11 @@ Donations help maintain and test Handheld Keyboard on real handheld devices.
 
 ## Download and install
 
-Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.8 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
+Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.9 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
 
 Install it with Android Debug Bridge:
 
-    adb install -r HandheldKeyboard-v0.4.8-release.apk
+    adb install -r HandheldKeyboard-v0.4.9-release.apk
     adb shell ime enable com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
     adb shell ime set com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
 
