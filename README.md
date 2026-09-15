@@ -4,6 +4,13 @@ A controller-friendly Android keyboard for handheld gaming devices, Android TV, 
 
 **Modified on 2026-09-14.** This project adds handheld layouts and navigation, a redesigned onboarding flow, adjustable sizing, custom light/dark themes, keyboard surface effects, configurable sound feedback, emoji and textmoji pickers with whole-grapheme backspace, and a themed editor-action key integrated into the keyboard row. The handheld keyboard repurposes its unused on-screen microphone key for emoji access. The inherited source is distributed under GPL-3.0-only; see [LICENSE.md](LICENSE.md).
 
+## In action
+
+| Keyboard in landscape | Quick settings with controller navigation | Theme gallery |
+| --- | --- | --- |
+| ![Retroid Quartz keyboard preview](docs/images/keyboard-retroid-quartz.png) | ![Quick settings deck](docs/images/quick-settings-deck.png) | ![Theme gallery preview](docs/images/theme-gallery.png) |
+
+
 ## Features
 
 - Navigate and type with a D-pad or supported game controller, including corrected spatial key focus and controller-aware key hints/remapping.
@@ -17,6 +24,12 @@ A controller-friendly Android keyboard for handheld gaming devices, Android TV, 
 - Preview themes in onboarding and open the reorganized keyboard settings directly from the keyboard.
 - Match the Go, Send, Search, or Done action key to the keyboard theme; the action key sits alongside the cursor controls.
 - Retain LeanKeyboard's language and layout support.
+
+## Support the project
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-00457C?logo=paypal&logoColor=white)](https://paypal.me/lucabarcas)
+
+Donations help maintain and test Handheld Keyboard on real handheld devices.
 
 ## Download and install
 
