@@ -60,4 +60,7 @@
     </string-array>
     <string-array name="handheld_pointer_theme_options"><item>Usar acento del teclado</item><item>Menta</item><item>Violeta</item><item>Ámbar</item></string-array>
     <string-array name="handheld_pointer_speed_options"><item>Precisa</item><item>Equilibrada</item><item>Rápida</item></string-array>
+    <string name="handheld_pointer_on">Puntero de mando activado</string>
+    <string name="handheld_pointer_off">Puntero de mando desactivado</string>
+    <string name="handheld_pointer_unavailable">Android no pudo mostrar el cursor de mando.</string>
 </resources>

@@ -15,6 +15,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 
@@ -56,10 +57,9 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         refreshScreenBounds();
         PointerInputBridge.register(this);
-        if (HandheldPointerPreferences.isPointerActive(this) &&
-                HandheldPointerPreferences.isControlsEnabled(this)) {
-            showPointer(true);
-        }
+        // Pointer mode is deliberately session-only. A service reconnect must never leave
+        // ordinary gamepad buttons captured after the cursor has disappeared.
+        HandheldPointerPreferences.setPointerActive(this, false);
     }
 
     @Override
@@ -69,7 +69,8 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
 
     @Override
     public void onInterrupt() {
-        hidePointer();
+        // Accessibility may interrupt feedback when windows change. The cursor is a visual
+        // overlay, not feedback, so keep it attached while pointer mode remains active.
     }
 
     @Override
@@ -98,6 +99,9 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         }
 
         if (!HandheldPointerPreferences.isPointerActive(this)) return false;
+        // Do not consume a controller button unless the corresponding cursor is visible.
+        // This preserves normal gamepad input when an OEM temporarily rejects the overlay.
+        if (!ensurePointerVisible()) return false;
         if (isDpad(keyCode)) {
             if (action == KeyEvent.ACTION_DOWN) moveByDpad(keyCode);
             return true;
@@ -146,7 +150,27 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
 
     private void setPointerActive(boolean active) {
         HandheldPointerPreferences.setPointerActive(this, active);
-        if (active) showPointer(true); else hidePointer();
+        if (active) {
+            showPointer(true);
+            if (!mOverlayAttached) {
+                // Do not leave the controller in a hidden input-capturing state.
+                HandheldPointerPreferences.setPointerActive(this, false);
+                Toast.makeText(this, getString(com.liskovsoft.leankeykeyboard.R.string.handheld_pointer_unavailable),
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } else {
+            hidePointer();
+        }
+        Toast.makeText(this, getString(active
+                        ? com.liskovsoft.leankeykeyboard.R.string.handheld_pointer_on
+                        : com.liskovsoft.leankeykeyboard.R.string.handheld_pointer_off),
+                Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean ensurePointerVisible() {
+        if (!mOverlayAttached) showPointer(false);
+        return mOverlayAttached;
     }
 
     private void showPointer(boolean entering) {
@@ -168,8 +192,13 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         mPointerView.refreshStyle();
         if (!mOverlayAttached) {
             updateWindowPosition();
-            mWindowManager.addView(mPointerView, mWindowParams);
-            mOverlayAttached = true;
+            try {
+                mWindowManager.addView(mPointerView, mWindowParams);
+                mOverlayAttached = true;
+            } catch (RuntimeException ignored) {
+                mOverlayAttached = false;
+                return;
+            }
         }
         if (entering && HandheldPointerPreferences.areAnimationsEnabled(this)) {
             mPointerView.setAlpha(0f);
@@ -216,7 +245,13 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         int size = dp(CURSOR_SIZE_DP);
         mWindowParams.x = mCursorX - size / 2;
         mWindowParams.y = mCursorY - size / 2;
-        if (mOverlayAttached) mWindowManager.updateViewLayout(mPointerView, mWindowParams);
+        if (mOverlayAttached) {
+            try {
+                mWindowManager.updateViewLayout(mPointerView, mWindowParams);
+            } catch (RuntimeException ignored) {
+                mOverlayAttached = false;
+            }
+        }
     }
 
     private void tap() {

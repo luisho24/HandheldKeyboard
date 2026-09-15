@@ -60,4 +60,7 @@
     </string-array>
     <string-array name="handheld_pointer_theme_options"><item>Match keyboard accent</item><item>Mint</item><item>Violet</item><item>Amber</item></string-array>
     <string-array name="handheld_pointer_speed_options"><item>Careful</item><item>Balanced</item><item>Fast</item></string-array>
+    <string name="handheld_pointer_on">Controller pointer on</string>
+    <string name="handheld_pointer_off">Controller pointer off</string>
+    <string name="handheld_pointer_unavailable">Android could not show the controller cursor.</string>
 </resources>
