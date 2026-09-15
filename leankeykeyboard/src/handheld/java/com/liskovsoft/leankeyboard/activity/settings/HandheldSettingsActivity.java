@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -46,6 +47,7 @@ public class HandheldSettingsActivity extends FragmentActivity {
     private static final int COLOR_TEXT = Color.rgb(241, 248, 249);
     private static final int COLOR_MUTED = Color.rgb(159, 187, 194);
     private static final int FIRST_CARD_ID = 0x70010000;
+    private static final String PAYPAL_DONATE_URL = "https://paypal.me/lucabarcas";
 
     private final List<View> mCards = new ArrayList<>();
     private int mNextId = FIRST_CARD_ID;
@@ -388,8 +390,17 @@ public class HandheldSettingsActivity extends FragmentActivity {
                     activity -> activity.startActivity(new Intent(activity, KbActivationActivity.class))),
             new CardSpec("↻", R.string.handheld_onboarding_restart,
                     R.string.handheld_settings_setup_desc,
-                    HandheldSettingsActivity::openSetup)
+                    HandheldSettingsActivity::openSetup),
+            new CardSpec("♥", R.string.handheld_settings_support,
+                    R.string.handheld_settings_support_desc,
+                    HandheldSettingsActivity::openDonation)
     };
+
+    /** Opens the voluntary project-support page outside the keyboard settings flow. */
+    private void openDonation() {
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PAYPAL_DONATE_URL));
+        startActivity(intent);
+    }
 
     private void openHandheldKeyboardSettings() {
         openHandheldFragment("com.liskovsoft.leankeyboard.fragments.settings.HandheldKeyboardSettingsFragment",

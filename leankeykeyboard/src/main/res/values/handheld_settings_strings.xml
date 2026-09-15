@@ -20,6 +20,8 @@
     <string name="handheld_settings_about_desc">Check app details, releases, and privacy information.</string>
     <string name="handheld_settings_more">More preferences</string>
     <string name="handheld_settings_more_desc">Suggestions, screen behavior, navigation, and other options.</string>
+    <string name="handheld_settings_support">Support development</string>
+    <string name="handheld_settings_support_desc">Donate through PayPal to help test and maintain Handheld Keyboard.</string>
     <string name="handheld_privacy_policy">Privacy notes</string>
     <string name="handheld_privacy_policy_desc">How text, settings, images, and optional speech recognition are handled.</string>
     <string name="handheld_source_code">Source code</string>
