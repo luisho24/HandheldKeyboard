@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.Keyboard;
@@ -26,6 +27,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
+import android.view.KeyEvent;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
@@ -77,7 +79,12 @@ public class LeanbackKeyboardContainer {
     private static final int HANDHELD_MODE_SYMBOLS = 1;
     private static final int HANDHELD_MODE_EMOJI = 2;
     private static final int HANDHELD_MODE_TEXTMOJI = 3;
+    private static final int HANDHELD_MODE_EDIT = 4;
     private static final String HANDHELD_PACKAGE = "com.handheldkeyboard.ime";
+    private static final int HANDHELD_ACTION_GO = 0;
+    private static final int HANDHELD_ACTION_HOME = 1;
+    private static final int HANDHELD_ACTION_END = 2;
+    private static final int HANDHELD_ACTION_PASTE = 3;
     public static final double TOUCH_MOVE_MIN_DISTANCE = 0.1D;
     public static final int TOUCH_STATE_CLICK = 3;
     public static final int TOUCH_STATE_NO_TOUCH = 0;
@@ -91,6 +98,10 @@ public class LeanbackKeyboardContainer {
     public static final int DIRECTION_RIGHT = 4;
     private Keyboard mAbcKeyboard;
     private Button mActionButtonView;
+    private Button mActionHomeButton;
+    private Button mActionEndButton;
+    private Button mActionPasteButton;
+    private View mHandheldActionRail;
     private final float mAlphaIn;
     private final float mAlphaOut;
     private boolean mAutoEnterSpaceEnabled;
@@ -108,6 +119,7 @@ public class LeanbackKeyboardContainer {
     private Keyboard mInitialMainKeyboard;
     private Keyboard mEmojiKeyboard;
     private Keyboard mTextmojiKeyboard;
+    private Keyboard mEditKeyboard;
     private int mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
     private KeyboardManager mKeyboardManager;
     private View mKeyboardsContainer;
@@ -210,6 +222,11 @@ public class LeanbackKeyboardContainer {
         mMainKeyboardView = (LeanbackKeyboardView) mRootView.findViewById(R.id.main_keyboard);
         mVoiceButtonView = (RecognizerView) mRootView.findViewById(R.id.voice);
         mActionButtonView = (Button) mRootView.findViewById(R.id.enter);
+        mActionHomeButton = (Button) mRootView.findViewById(R.id.action_home);
+        mActionEndButton = (Button) mRootView.findViewById(R.id.action_end);
+        mActionPasteButton = (Button) mRootView.findViewById(R.id.action_paste);
+        mHandheldActionRail = mRootView.findViewById(R.id.handheld_action_rail);
+        configureHandheldActionRail();
         mSelector = mRootView.findViewById(R.id.selector);
         mKeySelector = mRootView.findViewById(R.id.key_selector);
         mKeySelectorSquare = ContextCompat.getDrawable(mContext, R.drawable.key_selector_square);
@@ -248,6 +265,96 @@ public class LeanbackKeyboardContainer {
         });
         mKeyboardManager = new KeyboardManager(mContext);
         initKeyboards();
+    }
+
+    private void configureHandheldActionRail() {
+        boolean handheld = HANDHELD_PACKAGE.equals(mContext.getPackageName());
+        if (mHandheldActionRail != null) {
+            mHandheldActionRail.setVisibility(handheld ? View.VISIBLE : View.GONE);
+        }
+        Button[] extraButtons = {mActionHomeButton, mActionEndButton, mActionPasteButton};
+        for (Button button : extraButtons) {
+            if (button != null) {
+                button.setVisibility(handheld ? View.VISIBLE : View.GONE);
+            }
+        }
+        if (!handheld) {
+            return;
+        }
+
+        mActionHomeButton.setOnClickListener(v -> executeHandheldRailTouchAction(HANDHELD_ACTION_HOME));
+        mActionEndButton.setOnClickListener(v -> executeHandheldRailTouchAction(HANDHELD_ACTION_END));
+        mActionPasteButton.setOnClickListener(v -> executeHandheldRailTouchAction(HANDHELD_ACTION_PASTE));
+        mActionButtonView.setOnClickListener(v -> executeHandheldRailTouchAction(HANDHELD_ACTION_GO));
+    }
+
+    /** The edit deck owns the full keyboard width, so the separate action lane is hidden. */
+    private void setHandheldActionRailVisible(boolean visible) {
+        if (mHandheldActionRail != null) {
+            mHandheldActionRail.setVisibility(visible && isHandheldIme() ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private boolean isHandheldActionRailVisible() {
+        return isHandheldIme() && mHandheldActionRail != null &&
+                mHandheldActionRail.getVisibility() == View.VISIBLE;
+    }
+
+    /** Executes direct touch actions from the compact handheld action rail. */
+    private void executeHandheldRailTouchAction(int action) {
+        InputConnection connection = mContext.getCurrentInputConnection();
+        if (connection == null) {
+            return;
+        }
+        switch (action) {
+            case HANDHELD_ACTION_HOME:
+                sendRailKeyEvent(connection, KeyEvent.KEYCODE_MOVE_HOME);
+                return;
+            case HANDHELD_ACTION_END:
+                sendRailKeyEvent(connection, KeyEvent.KEYCODE_MOVE_END);
+                return;
+            case HANDHELD_ACTION_PASTE:
+                ClipboardManager clipboard = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                if (clipboard != null && clipboard.hasPrimaryClip()) {
+                    ClipData clip = clipboard.getPrimaryClip();
+                    if (clip != null && clip.getItemCount() > 0) {
+                        CharSequence text = clip.getItemAt(0).coerceToText(mContext);
+                        if (!TextUtils.isEmpty(text)) {
+                            connection.commitText(text, 1);
+                        }
+                    }
+                }
+                return;
+            case HANDHELD_ACTION_GO:
+            default:
+                if (!mContext.sendDefaultEditorAction(true)) {
+                    LeanbackUtils.sendEnterKey(connection);
+                }
+        }
+    }
+
+    private static void sendRailKeyEvent(InputConnection connection, int keyCode) {
+        long now = System.currentTimeMillis();
+        connection.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0));
+        connection.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0));
+    }
+
+    /** Used by the controller so D-pad activation and touch activation agree. */
+    public void onHandheldRailAction(int action, InputListener listener) {
+        switch (action) {
+            case HANDHELD_ACTION_HOME:
+                listener.onEntry(InputListener.ENTRY_TYPE_HOME, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case HANDHELD_ACTION_END:
+                listener.onEntry(InputListener.ENTRY_TYPE_END, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case HANDHELD_ACTION_PASTE:
+                onClipboardClick(listener);
+                return;
+            case HANDHELD_ACTION_GO:
+            default:
+                listener.onEntry(InputListener.ENTRY_TYPE_ACTION, 0, null);
+        }
     }
 
     private void configureFocus(KeyFocus focus, Rect rect, int index, int type) {
@@ -503,7 +610,7 @@ public class LeanbackKeyboardContainer {
                     dismissMiniKeyboard();
                     break;
                 case KeyFocus.TYPE_ACTION:
-                    LeanbackUtils.sendAccessibilityEvent(mActionButtonView, true);
+                    LeanbackUtils.sendAccessibilityEvent(getHandheldActionButton(focus.index), true);
                     dismissMiniKeyboard();
                     break;
                 case KeyFocus.TYPE_SUGGESTION:
@@ -621,8 +728,11 @@ public class LeanbackKeyboardContainer {
      * @return whether focus is found or not
      */
     public boolean getBestFocus(final Float x, final Float y, final KeyFocus focus) {
-        offsetRect(mRect, mActionButtonView);
-        int actionLeft = mRect.left;
+        int actionLeft = Integer.MAX_VALUE;
+        if (isHandheldActionRailVisible()) {
+            offsetRect(mRect, mActionButtonView);
+            actionLeft = mRect.left;
+        }
         offsetRect(mRect, mMainKeyboardView);
         int keyboardTop = mRect.top;
         Float newX = x;
@@ -652,9 +762,8 @@ public class LeanbackKeyboardContainer {
         } else if (newY < (float) keyboardTop && mEscapeNorthEnabled) {
             escapeNorth();
             return false;
-        } else if (newX > (float) actionLeft) {
-            offsetRect(mRect, mActionButtonView);
-            configureFocus(focus, mRect, 0, KeyFocus.TYPE_ACTION);
+        } else if (isHandheldActionRailVisible() && newX > (float) actionLeft) {
+            configureNearestHandheldActionFocus(focus, newY);
             return true;
         } else {
             mX = newX;
@@ -696,8 +805,15 @@ public class LeanbackKeyboardContainer {
             if (LeanKeyPreferences.instance(mContext).isCyclicNavigationEnabled()) {
                 if (dir == DIRECTION_RIGHT || dir == DIRECTION_LEFT) {
                     Rect actionRect = new Rect();
-                    offsetRect(actionRect, mActionButtonView);
-                    boolean onSameRow = Math.abs(oldFocus.rect.top - actionRect.top) < 20;
+                    boolean hasActionRail = isHandheldActionRailVisible();
+                    if (hasActionRail) {
+                        offsetRect(actionRect, mActionButtonView);
+                    }
+                    // A handheld action key spans the full height of its lane.
+                    // Its bottom still aligns with the cursor/action row, which
+                    // is the intended controller entry point for Go/Send.
+                    boolean onSameRow = hasActionRail &&
+                            Math.abs(oldFocus.rect.bottom - actionRect.bottom) < 20;
 
                     if (onSameRow && !LeanbackUtils.isSubmitButton(oldFocus)) {
                         // move focus to submit button
@@ -706,7 +822,10 @@ public class LeanbackKeyboardContainer {
                     } else {
                         offsetRect(mRect, mMainKeyboardView);
                         float x = dir == DIRECTION_RIGHT ? 0 : mRect.right; // 0 - rightmost position, right - leftmost
-                        int keyIdx = mMainKeyboardView.getNearestIndex(x, oldFocus.rect.top - mRect.top);
+                        float sourceY = LeanbackUtils.isSubmitButton(oldFocus)
+                                ? mRect.bottom - 1f
+                                : oldFocus.rect.top - mRect.top;
+                        int keyIdx = mMainKeyboardView.getNearestIndex(x, sourceY);
                         Key key = mMainKeyboardView.getKey(keyIdx);
                         configureFocus(newFocus, mRect, keyIdx, key, 0);
                     }
@@ -749,13 +868,46 @@ public class LeanbackKeyboardContainer {
     public boolean getNextFocusInDirection(int direction, KeyFocus startFocus, KeyFocus nextFocus) {
         switch (startFocus.type) {
             case KeyFocus.TYPE_MAIN:
+                Key currentKey = getKey(startFocus.type, startFocus.index);
+                if (mHandheldKeyboardMode == HANDHELD_MODE_EDIT &&
+                        moveWithinQuickSettingsDeck(direction, startFocus, nextFocus)) {
+                    return true;
+                }
+                if (mHandheldKeyboardMode == HANDHELD_MODE_EDIT) {
+                    // Quick settings is a bounded 2x4 grid. Do not let the generic
+                    // keyboard fallback wrap an edge into a stale previous focus.
+                    return false;
+                }
+                // The extra action rail sits outside the XML keyboard grid. A
+                // generic nearest-key search can incorrectly choose the
+                // cursor-right key below a row (for example Delete -> Right)
+                // before it considers that rail. Exit directly into the rail
+                // from every right-edge key and preserve the row's Y position.
+                if (isHandheldActionRailVisible()
+                        && (direction & DIRECTION_RIGHT) != 0
+                        && currentKey != null
+                        && (currentKey.edgeFlags & Keyboard.EDGE_RIGHT) != 0) {
+                    configureNearestHandheldActionFocus(nextFocus, startFocus.rect.centerY());
+                    return true;
+                }
+                if (isHandheldIme()
+                        && !isHandheldActionRailVisible()
+                        && (direction & DIRECTION_RIGHT) != 0
+                        && currentKey != null
+                        && (currentKey.edgeFlags & Keyboard.EDGE_RIGHT) != 0) {
+                    // The edit deck uses all available width. Do not navigate into the
+                    // hidden alpha-keyboard action rail from its right edge.
+                    // Returning true would let the controller reuse a stale temporary
+                    // focus, causing Esc to jump to a previous key.
+                    return false;
+                }
                 if (moveToDirectionalKey(direction, startFocus, nextFocus)) {
                     return true;
                 }
 
                 // Keep the existing transitions out of the keyboard (suggestions, action
                 // button, and cyclic wrap handling) when there is no key in this direction.
-                Key key = getKey(startFocus.type, startFocus.index);
+                Key key = currentKey;
                 if (key == null) {
                     return false;
                 }
@@ -791,21 +943,28 @@ public class LeanbackKeyboardContainer {
             default:
                 break;
             case KeyFocus.TYPE_ACTION:
-                if ((direction & DIRECTION_LEFT) != 0) {
-                    Rect actionRect = new Rect();
-                    offsetRect(actionRect, mActionButtonView);
-                    offsetRect(mRect, mMainKeyboardView);
-                    // Use the action key's row when returning to the grid. Reusing
-                    // the previous pointer Y could send focus to the top-right `@`
-                    // key instead of the adjacent cursor-right key.
-                    return getBestFocus((float) mRect.right,
-                            (float) actionRect.centerY(), nextFocus);
+                if ((direction & (DIRECTION_UP | DIRECTION_DOWN)) != 0) {
+                    int nextAction = getAdjacentHandheldAction(startFocus.index, direction);
+                    if (nextAction != -1) {
+                        configureHandheldActionFocus(nextFocus, nextAction);
+                        return true;
+                    }
+                    if ((direction & DIRECTION_UP) != 0) {
+                        offsetRect(mRect, mMainKeyboardView);
+                        offsetRect(mRect, mSuggestions);
+                        return getBestFocus((float) startFocus.rect.centerX(), (float) mRect.centerY(), nextFocus);
+                    }
+                    return true;
                 }
 
-                if ((direction & DIRECTION_UP) != 0) {
+                if ((direction & DIRECTION_LEFT) != 0) {
+                    Button actionButton = getHandheldActionButton(startFocus.index);
+                    Rect actionRect = new Rect();
+                    offsetRect(actionRect, actionButton);
                     offsetRect(mRect, mMainKeyboardView);
-                    offsetRect(mRect, mSuggestions);
-                    return getBestFocus((float) startFocus.rect.centerX(), (float) mRect.centerY(), nextFocus);
+                    return getBestFocus((float) mRect.right,
+                            Math.min((float) mRect.bottom - 1f,
+                                    (float) actionRect.centerY()), nextFocus);
                 }
                 break;
             case KeyFocus.TYPE_SUGGESTION:
@@ -861,6 +1020,57 @@ public class LeanbackKeyboardContainer {
                 }
         }
 
+        return true;
+    }
+
+    /**
+     * The quick-settings deck is an intentional 2x4 controller grid. Use direct
+     * row/column navigation rather than the free-form keyboard geometry used by
+     * letter rows and the wide space key.
+     */
+    private boolean moveWithinQuickSettingsDeck(int direction, KeyFocus startFocus,
+                                                KeyFocus nextFocus) {
+        if (direction != DIRECTION_LEFT && direction != DIRECTION_RIGHT &&
+                direction != DIRECTION_UP && direction != DIRECTION_DOWN) {
+            return false;
+        }
+        int source = startFocus.index;
+        int keyCount = mMainKeyboardView.getKeyCount();
+        if (source < 0 || source >= keyCount || keyCount != 8) {
+            return false;
+        }
+
+        int row = source / 4;
+        int column = source % 4;
+        int target = source;
+        switch (direction) {
+            case DIRECTION_LEFT:
+                if (column == 0) return false;
+                target--;
+                break;
+            case DIRECTION_RIGHT:
+                if (column == 3) return false;
+                target++;
+                break;
+            case DIRECTION_UP:
+                if (row == 0) return false;
+                target -= 4;
+                break;
+            case DIRECTION_DOWN:
+                if (row == 1) return false;
+                target += 4;
+                break;
+            default:
+                return false;
+        }
+
+        Key targetKey = mMainKeyboardView.getKey(target);
+        if (targetKey == null) {
+            return false;
+        }
+        Rect keyboardRect = new Rect();
+        offsetRect(keyboardRect, mMainKeyboardView);
+        configureFocus(nextFocus, keyboardRect, target, targetKey, KeyFocus.TYPE_MAIN);
         return true;
     }
 
@@ -1002,19 +1212,101 @@ public class LeanbackKeyboardContainer {
         mContext.hideIme();
     }
 
+    /** Opens one of the handheld settings areas from the keyboard quick-settings deck. */
+    public void openHandheldSettingsSection(String section) {
+        if (!isHandheldIme()) {
+            openKeyboardSettings();
+            return;
+        }
+        Intent intent = new Intent();
+        intent.setClassName(mContext.getPackageName(),
+                "com.liskovsoft.leankeyboard.activity.settings.HandheldSettingsActivity");
+        intent.putExtra("open_section", section);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Helpers.startIntent(mContext, intent)) {
+            mContext.hideIme();
+        }
+    }
+
     public void onModeChangeClick() {
         dismissMiniKeyboard();
         if (isHandheldIme() && (mHandheldKeyboardMode == HANDHELD_MODE_EMOJI ||
-                mHandheldKeyboardMode == HANDHELD_MODE_TEXTMOJI)) {
+                mHandheldKeyboardMode == HANDHELD_MODE_TEXTMOJI ||
+                mHandheldKeyboardMode == HANDHELD_MODE_EDIT)) {
+            setHandheldActionRailVisible(true);
             mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
             mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
         } else if (mMainKeyboardView.getKeyboard().equals(mSymKeyboard)) {
+            setHandheldActionRailVisible(true);
             mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
             mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
         } else {
+            setHandheldActionRailVisible(true);
             mMainKeyboardView.setKeyboard(mSymKeyboard);
             mHandheldKeyboardMode = HANDHELD_MODE_SYMBOLS;
         }
+    }
+
+    private Button getHandheldActionButton(int action) {
+        switch (action) {
+            case HANDHELD_ACTION_HOME:
+                return mActionHomeButton;
+            case HANDHELD_ACTION_END:
+                return mActionEndButton;
+            case HANDHELD_ACTION_PASTE:
+                return mActionPasteButton;
+            case HANDHELD_ACTION_GO:
+            default:
+                return mActionButtonView;
+        }
+    }
+
+    private void configureHandheldActionFocus(KeyFocus focus, int action) {
+        if (!isHandheldActionRailVisible()) {
+            return;
+        }
+        Button button = getHandheldActionButton(action);
+        if (button == null || button.getVisibility() != View.VISIBLE) {
+            button = mActionButtonView;
+            action = HANDHELD_ACTION_GO;
+        }
+        offsetRect(mRect, button);
+        configureFocus(focus, mRect, action, KeyFocus.TYPE_ACTION);
+    }
+
+    private void configureNearestHandheldActionFocus(KeyFocus focus, float y) {
+        int[] actions = {HANDHELD_ACTION_HOME, HANDHELD_ACTION_END,
+                HANDHELD_ACTION_PASTE, HANDHELD_ACTION_GO};
+        int nearestAction = HANDHELD_ACTION_GO;
+        float nearestDistance = Float.MAX_VALUE;
+        for (int action : actions) {
+            Button button = getHandheldActionButton(action);
+            if (button == null || button.getVisibility() != View.VISIBLE) {
+                continue;
+            }
+            offsetRect(mRect, button);
+            float distance = Math.abs(y - mRect.centerY());
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestAction = action;
+            }
+        }
+        configureHandheldActionFocus(focus, nearestAction);
+    }
+
+    private int getAdjacentHandheldAction(int action, int direction) {
+        int[] verticalOrder = {HANDHELD_ACTION_HOME, HANDHELD_ACTION_END,
+                HANDHELD_ACTION_PASTE, HANDHELD_ACTION_GO};
+        for (int i = 0; i < verticalOrder.length; i++) {
+            if (verticalOrder[i] != action) {
+                continue;
+            }
+            int next = i + (direction == DIRECTION_UP ? -1 : 1);
+            if (next >= 0 && next < verticalOrder.length) {
+                return verticalOrder[next];
+            }
+        }
+        return -1;
     }
 
     public void onEmojiClick() {
@@ -1026,6 +1318,7 @@ public class LeanbackKeyboardContainer {
             mEmojiKeyboard = new Keyboard(mContext, R.xml.handheld_emoji);
             fillHandheldRows(mEmojiKeyboard, mEmojiKeyboard.getMinWidth());
         }
+        setHandheldActionRailVisible(true);
         mMainKeyboardView.setKeyboard(mEmojiKeyboard);
         mHandheldKeyboardMode = HANDHELD_MODE_EMOJI;
     }
@@ -1039,8 +1332,41 @@ public class LeanbackKeyboardContainer {
             mTextmojiKeyboard = new Keyboard(mContext, R.xml.handheld_textmoji);
             fillHandheldRows(mTextmojiKeyboard, mTextmojiKeyboard.getMinWidth());
         }
+        setHandheldActionRailVisible(true);
         mMainKeyboardView.setKeyboard(mTextmojiKeyboard);
         mHandheldKeyboardMode = HANDHELD_MODE_TEXTMOJI;
+    }
+
+    /** Opens the compact settings deck that mirrors the handheld settings home. */
+    public void onEditClick() {
+        if (!isHandheldIme()) {
+            return;
+        }
+        dismissMiniKeyboard();
+        if (mHandheldKeyboardMode == HANDHELD_MODE_EDIT) {
+            setHandheldActionRailVisible(true);
+            mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
+            mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
+            return;
+        }
+        if (mEditKeyboard == null) {
+            mEditKeyboard = new Keyboard(mContext, R.xml.handheld_edit);
+            // The command deck has fewer keys per row than the alpha keyboard.
+            // Give it a wider source grid so the handheld view reaches its full
+            // landscape width before its safety scale limit is applied.
+            int renderedWidth = Math.max(mRootView.getWidth(),
+                    mContext.getResources().getDisplayMetrics().widthPixels);
+            int fullWidthSource = Math.round(renderedWidth * 0.97f / 2.9f);
+            fillHandheldRows(mEditKeyboard,
+                    Math.max(mEditKeyboard.getMinWidth(), fullWidthSource));
+        }
+        setHandheldActionRailVisible(false);
+        mMainKeyboardView.setKeyboard(mEditKeyboard);
+        mHandheldKeyboardMode = HANDHELD_MODE_EDIT;
+        // A predictable entry point makes the deck discoverable and avoids
+        // carrying a letter-key focus index into this eight-card layout.
+        offsetRect(mRect, mMainKeyboardView);
+        moveFocusToIndex(0, KeyFocus.TYPE_MAIN);
     }
 
     private boolean isHandheldIme() {
@@ -1137,6 +1463,7 @@ public class LeanbackKeyboardContainer {
         }
 
         mKeyboardsContainer.setLayoutParams(params);
+        setHandheldActionRailVisible(true);
         mMainKeyboardView.setKeyboard(mInitialMainKeyboard);
         mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
         mVoiceButtonView.setMicEnabled(mVoiceEnabled);
@@ -1160,7 +1487,7 @@ public class LeanbackKeyboardContainer {
         }
     }
 
-    /** Size the editor action as the final keycap in the handheld keyboard row. */
+    /** Sizes the compact Go key at the base of the handheld action rail. */
     private void sizeHandheldActionKey() {
         if (!"com.handheldkeyboard.ime".equals(mContext.getPackageName())) {
             return;
@@ -1180,19 +1507,44 @@ public class LeanbackKeyboardContainer {
         }
 
         ViewGroup.LayoutParams params = mActionButtonView.getLayoutParams();
-        if (params instanceof LinearLayout.LayoutParams) {
-            LinearLayout.LayoutParams rowParams = (LinearLayout.LayoutParams) params;
-            int baseWidth = mContext.getResources().getDimensionPixelSize(R.dimen.handheld_action_key_width);
-            rowParams.width = Math.max(baseWidth, Math.round(rightArrow.width * 1.25f));
-            rowParams.height = rightArrow.height;
-            rowParams.leftMargin = mContext.getResources().getDimensionPixelSize(R.dimen.handheld_action_key_spacing);
-            mActionButtonView.setLayoutParams(rowParams);
-            int actionTextSize = Math.round(mMainKeyboardView.mKeyTextSize * 0.58f);
-            int minTextSize = Math.round(18 * mContext.getResources().getDisplayMetrics().scaledDensity);
-            int maxTextSize = Math.round(28 * mContext.getResources().getDisplayMetrics().scaledDensity);
-            mActionButtonView.setTextSize(TypedValue.COMPLEX_UNIT_PX,
-                    Math.max(minTextSize, Math.min(maxTextSize, actionTextSize)));
+        if (!(params instanceof MarginLayoutParams)) {
+            return;
         }
+
+        MarginLayoutParams actionParams = (MarginLayoutParams) params;
+        Resources resources = mContext.getResources();
+        int actionTextSize = Math.round(mMainKeyboardView.mKeyTextSize * 0.64f);
+        int minTextSize = Math.round(14 * resources.getDisplayMetrics().scaledDensity);
+        int maxTextSize = Math.round(28 * resources.getDisplayMetrics().scaledDensity);
+        actionTextSize = Math.max(minTextSize, Math.min(maxTextSize, actionTextSize));
+        mActionButtonView.setSingleLine(true);
+        mActionButtonView.setEllipsize(TextUtils.TruncateAt.END);
+        mActionButtonView.setTextSize(TypedValue.COMPLEX_UNIT_PX, actionTextSize);
+
+        View actionParent = mActionButtonView.getParent() instanceof View
+                ? (View) mActionButtonView.getParent() : null;
+        int availableWidth = actionParent == null ? 0 : actionParent.getWidth();
+        int horizontalPadding = mActionButtonView.getPaddingLeft() + mActionButtonView.getPaddingRight();
+        String actionLabel = mActionButtonView.getText().toString().toUpperCase(Locale.ROOT);
+        float actionLabelWidth = mActionButtonView.getPaint().measureText(actionLabel);
+
+        // Search and custom action labels can be considerably wider than a cursor key.
+        // Shrink only when their pane has a concrete width limit; otherwise preserve a
+        // large, readable label and let the next layout pass apply the exact width.
+        if (availableWidth > horizontalPadding && actionLabelWidth + horizontalPadding > availableWidth) {
+            float fitFactor = (availableWidth - horizontalPadding) / actionLabelWidth;
+            int fittedTextSize = Math.max(minTextSize, Math.round(actionTextSize * fitFactor));
+            if (fittedTextSize < actionTextSize) {
+                actionTextSize = fittedTextSize;
+                mActionButtonView.setTextSize(TypedValue.COMPLEX_UNIT_PX, actionTextSize);
+            }
+        }
+
+        // The parent is exactly the lane to the right of the keyboard grid.
+        // Go uses only one keycap; Home, End and Paste use the space above it.
+        actionParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        actionParams.height = rightArrow.height;
+        mActionButtonView.setLayoutParams(actionParams);
     }
 
     public void onTextEntry() {
@@ -1280,6 +1632,11 @@ public class LeanbackKeyboardContainer {
             final float y = rect.exactCenterY() - deltaY / 2.0F;
             mSelectorAnimation.cancel();
 
+            // The focus drawable is swapped for square and stretched keys. Tint
+            // both cached variants on every move so the selected theme's accent
+            // remains visible after that swap (especially for Xbox green).
+            tintSelectorDrawables();
+
             // Fix 9-patch stretching for square keys (especially on large keyboard).
             if (Math.abs(deltaX - deltaY) < 1) { // is square
                 mKeySelector.setBackground(mKeySelectorSquare);
@@ -1360,6 +1717,7 @@ public class LeanbackKeyboardContainer {
         } else {
             mInitialMainKeyboard = nextKeyboard.abcKeyboard;
             mAbcKeyboard = nextKeyboard.abcKeyboard;
+            setHandheldActionRailVisible(true);
             mMainKeyboardView.setKeyboard(nextKeyboard.abcKeyboard);
             mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
 
@@ -1373,6 +1731,7 @@ public class LeanbackKeyboardContainer {
         KeyboardData keyboard = mKeyboardManager.get();
         mInitialMainKeyboard = keyboard.abcKeyboard;
         mAbcKeyboard = keyboard.abcKeyboard;
+        setHandheldActionRailVisible(true);
         mMainKeyboardView.setKeyboard(keyboard.abcKeyboard);
         mHandheldKeyboardMode = HANDHELD_MODE_ALPHA;
 
@@ -1380,6 +1739,25 @@ public class LeanbackKeyboardContainer {
         mNumKeyboard = keyboard.numKeyboard;
 
         mThemeManager.updateKeyboardTheme();
+        tintSelectorDrawables();
+    }
+
+    private void tintSelectorDrawables() {
+        if (mThemeManager == null) {
+            return;
+        }
+        int color = mThemeManager.getFocusColor();
+        if (mKeySelector != null) {
+            tintSelectorDrawable(mKeySelector.getBackground(), color);
+        }
+        tintSelectorDrawable(mKeySelectorSquare, color);
+        tintSelectorDrawable(mKeySelectorStretched, color);
+    }
+
+    private void tintSelectorDrawable(Drawable drawable, int color) {
+        if (drawable != null) {
+            drawable.mutate().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        }
     }
 
     public void updateSuggestions(ArrayList<String> suggestions) {

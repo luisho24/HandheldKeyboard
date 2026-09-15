@@ -14,6 +14,7 @@ import android.view.View.OnHoverListener;
 import android.view.View.OnLayoutChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
@@ -171,8 +172,8 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 case KeyFocus.TYPE_VOICE:
                     mContainer.onVoiceClick();
                     return;
-                case KeyFocus.TYPE_ACTION: // User presses Go, Send, Search etc
-                    mInputListener.onEntry(InputListener.ENTRY_TYPE_ACTION, 0, null);
+                case KeyFocus.TYPE_ACTION: // The handheld rail contains Go plus editing actions.
+                    mContainer.onHandheldRailAction(focus.index, mInputListener);
                     // mContext.hideWindow(); // SmartYouTubeTV fix: force hide keyboard
                     return;
                 case KeyFocus.TYPE_SUGGESTION:
@@ -319,6 +320,66 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
                 return;
             case LeanbackKeyboardView.KEYCODE_LEFT:
                 mInputListener.onEntry(InputListener.ENTRY_TYPE_LEFT, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_UP:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_UP, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_DOWN:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_DOWN, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_HOME:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_HOME, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_END:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_END, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_SELECT_LEFT:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_SELECT_LEFT, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_SELECT_RIGHT:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_SELECT_RIGHT, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_SELECT_UP:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_SELECT_UP, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_SELECT_DOWN:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_SELECT_DOWN, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_UNDO:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_UNDO, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_REDO:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_REDO, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_TAB:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_TAB, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_ESCAPE:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_ESCAPE, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_SELECT_ALL:
+                mInputListener.onEntry(InputListener.ENTRY_TYPE_SELECT_ALL, LeanbackKeyboardView.SHIFT_OFF, null);
+                return;
+            case LeanbackKeyboardView.KEYCODE_EDIT_TOGGLE:
+                mContainer.onEditClick();
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_THEME:
+                mContainer.openHandheldSettingsSection("theme");
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_LAYOUT:
+                mContainer.openHandheldSettingsSection("layout");
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_SOUND:
+                mContainer.openHandheldSettingsSection("sound");
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_MORE:
+                mContainer.openHandheldSettingsSection("more");
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_ABOUT:
+                mContainer.openHandheldSettingsSection("about");
+                return;
+            case LeanbackKeyboardView.KEYCODE_QUICK_SETUP:
+                mContainer.openHandheldSettingsSection("setup");
                 return;
             case LeanbackKeyboardView.KEYCODE_SYM_TOGGLE:
                 if (Log.isLoggable("LbKbController", Log.DEBUG)) {
@@ -874,7 +935,7 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
     }
 
     private void onHideIme() {
-        mContext.requestHideSelf(InputMethodService.BACK_DISPOSITION_DEFAULT);
+        mContext.requestHideSelf(InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     public void onStartInputView() {
@@ -1002,6 +1063,19 @@ public class LeanbackKeyboardController implements LeanbackKeyboardContainer.Voi
         int ENTRY_TYPE_SUGGESTION = 2;
         int ENTRY_TYPE_VOICE = 6;
         int ENTRY_TYPE_VOICE_DISMISS = 8;
+        int ENTRY_TYPE_UP = 9;
+        int ENTRY_TYPE_DOWN = 10;
+        int ENTRY_TYPE_HOME = 11;
+        int ENTRY_TYPE_END = 12;
+        int ENTRY_TYPE_SELECT_LEFT = 13;
+        int ENTRY_TYPE_SELECT_RIGHT = 14;
+        int ENTRY_TYPE_SELECT_UP = 15;
+        int ENTRY_TYPE_SELECT_DOWN = 16;
+        int ENTRY_TYPE_UNDO = 17;
+        int ENTRY_TYPE_REDO = 18;
+        int ENTRY_TYPE_TAB = 19;
+        int ENTRY_TYPE_ESCAPE = 20;
+        int ENTRY_TYPE_SELECT_ALL = 21;
 
         /**
          * User has typed something

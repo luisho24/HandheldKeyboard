@@ -17,8 +17,8 @@
     <string name="theme_surface_translucent">Translucent keyboard surface</string>
     <string name="theme_surface_translucent_desc">Blend the surfaces with what is behind the keyboard.</string>
     <string name="theme_surface_glass">Frosted glass surface</string>
-    <string name="theme_surface_glass_desc">Use backdrop blur on Android 12 and newer; earlier versions fall back to translucency.</string>
+    <string name="theme_surface_glass_desc">A keyboard-only frosted surface with tint and a glass edge. Android IME windows cannot safely blur another app behind this area.</string>
     <string name="theme_surface_liquid">Liquid glass</string>
-    <string name="theme_surface_liquid_desc">Keyboard-bounded blur with a luminous, refractive glass rim.</string>
+    <string name="theme_surface_liquid_desc">A keyboard-only luminous, refractive glass rim with layered translucency.</string>
     <string name="theme_surface_opacity">Surface opacity</string>
 </resources>

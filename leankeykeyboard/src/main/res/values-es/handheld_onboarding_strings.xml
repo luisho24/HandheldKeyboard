@@ -22,6 +22,12 @@
     <string name="onboarding_theme_xbox_desc">Superficies verde profundo y foco intenso</string>
     <string name="onboarding_theme_switch">Nintendo Switch</string>
     <string name="onboarding_theme_switch_desc">Paleta clara y limpia con acento coral</string>
+    <string name="onboarding_theme_retroid_aurora">Retroid Aurora</string>
+    <string name="onboarding_theme_retroid_aurora_desc">Azul OLED con estelas de luz cian e índigo</string>
+    <string name="onboarding_theme_retroid_ember">Retroid Ember Circuit</string>
+    <string name="onboarding_theme_retroid_ember_desc">Brillo de circuito cálido, controles ámbar y foco magenta</string>
+    <string name="onboarding_theme_retroid_quartz">Retroid Quartz</string>
+    <string name="onboarding_theme_retroid_quartz_desc">Una superficie titanio clara para jugar de día</string>
     <string name="onboarding_theme_night">Noche</string>
     <string name="onboarding_theme_night_desc">Grafito profundo con un acento azul</string>
     <string name="onboarding_theme_carbon">Carbón</string>
@@ -60,5 +66,6 @@
     <string name="onboarding_back">Atrás</string>
     <string name="onboarding_skip">Más tarde</string>
     <string name="onboarding_theme_saved">Tema guardado</string>
+    <string name="handheld_theme_done">Listo</string>
     <string name="onboarding_surface_desc">El vidrio líquido mantiene el desenfoque dentro del teclado y añade un borde refractado.</string>
 </resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Retroid Pocket 6 Quartz: high-contrast titanium light theme for daylight play. -->
+    <color name="keyboard_background_retroidquartz">#ffe6eef3</color>
+    <color name="candidate_background_retroidquartz">#ffd5e2e9</color>
+    <color name="candidate_font_color_retroidquartz">#ff386bc4</color>
+    <color name="enter_key_font_color_retroidquartz">#ff386bc4</color>
+    <color name="key_text_default_retroidquartz">#ff172432</color>
+    <color name="key_background_retroidquartz">#fff7fbfd</color>
+    <color name="key_focus_color_retroidquartz">#ff287e8e</color>
+</resources>

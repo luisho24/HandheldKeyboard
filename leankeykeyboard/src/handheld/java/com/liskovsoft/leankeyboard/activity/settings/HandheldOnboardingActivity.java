@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat;
 
 import com.liskovsoft.leankeyboard.addons.resize.HandheldDisplayProfiles;
 import com.liskovsoft.leankeyboard.ime.LeanbackImeService;
+import com.liskovsoft.leankeyboard.receiver.RestartServiceReceiver;
 import com.liskovsoft.leankeyboard.utils.KeyboardLayoutPreferences;
 import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
 import com.liskovsoft.leankeykeyboard.R;
@@ -67,6 +68,10 @@ public class HandheldOnboardingActivity extends Activity {
     private LeanKeyPreferences mPrefs;
     private FrameLayout mRoot;
     private LinearLayout mPageContent;
+    private ScrollView mPageScroll;
+    private boolean mLandscapeLayout;
+    private String mRestoredFocusKey;
+    private int mRestoredScrollY;
     private TextView mStepCounter;
     private TextView mActivationStatus;
     private View[] mProgressSegments;
@@ -76,14 +81,23 @@ public class HandheldOnboardingActivity extends Activity {
     private int mStep;
     private boolean mOpeningThemeEditor;
     private boolean mReturnToSettings;
+    private boolean mThemeOnly;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPrefs = LeanKeyPreferences.instance(this);
+        mLandscapeLayout = isLandscapeLayout();
         mReturnToSettings = getIntent().getBooleanExtra("return_to_settings", false);
-        mStep = savedInstanceState == null ? 0 : savedInstanceState.getInt("onboardingStep", 0);
+        mThemeOnly = getIntent().getBooleanExtra("theme_only", false);
+        int requestedStep = getIntent().getIntExtra("start_step", 0);
+        mStep = savedInstanceState == null ? requestedStep : savedInstanceState.getInt("onboardingStep", requestedStep);
+        if (mThemeOnly) mStep = 1;
         mStep = Math.max(0, Math.min(STEP_COUNT - 1, mStep));
+        if (savedInstanceState != null) {
+            mRestoredFocusKey = savedInstanceState.getString("onboardingFocusKey");
+            mRestoredScrollY = savedInstanceState.getInt("onboardingScrollY", 0);
+        }
         styleSystemBars();
         buildShell();
         renderStep(false);
@@ -102,11 +116,19 @@ public class HandheldOnboardingActivity extends Activity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putInt("onboardingStep", mStep);
+        View focused = getCurrentFocus();
+        String focusKey = stableFocusKey(focused);
+        if (focusKey != null) outState.putString("onboardingFocusKey", focusKey);
+        if (mPageScroll != null) outState.putInt("onboardingScrollY", mPageScroll.getScrollY());
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onBackPressed() {
+        if (mThemeOnly) {
+            finish();
+            return;
+        }
         if (mStep > 0) {
             mStep--;
             renderStep(true);
@@ -136,7 +158,10 @@ public class HandheldOnboardingActivity extends Activity {
 
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(LinearLayout.VERTICAL);
-        shell.setPadding(dp(22), dp(14), dp(22), dp(12));
+        int horizontalPadding = dp(mLandscapeLayout ? 30 : 22);
+        int topPadding = dp(mLandscapeLayout ? 7 : 14);
+        int bottomPadding = dp(mLandscapeLayout ? 5 : 12);
+        shell.setPadding(horizontalPadding, topPadding, horizontalPadding, bottomPadding);
         mRoot.addView(shell, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
@@ -145,18 +170,19 @@ public class HandheldOnboardingActivity extends Activity {
         header.setOrientation(LinearLayout.HORIZONTAL);
         TextView brand = text(R.string.onboarding_brand, 12, COLOR_ACCENT, Typeface.BOLD);
         if (Build.VERSION.SDK_INT >= 21) brand.setLetterSpacing(0.13f);
-        header.addView(brand, new LinearLayout.LayoutParams(0, dp(26), 1f));
+        int headerHeight = dp(mLandscapeLayout ? 22 : 26);
+        header.addView(brand, new LinearLayout.LayoutParams(0, headerHeight, 1f));
         mStepCounter = text("", 12, COLOR_MUTED, Typeface.BOLD);
         header.addView(mStepCounter, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(26)));
+                LinearLayout.LayoutParams.WRAP_CONTENT, headerHeight));
         shell.addView(header);
 
         LinearLayout progress = new LinearLayout(this);
         progress.setOrientation(LinearLayout.HORIZONTAL);
         LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, dp(3));
-        progressParams.topMargin = dp(11);
-        progressParams.bottomMargin = dp(9);
+        progressParams.topMargin = dp(mLandscapeLayout ? 7 : 11);
+        progressParams.bottomMargin = dp(mLandscapeLayout ? 6 : 9);
         shell.addView(progress, progressParams);
         mProgressSegments = new View[STEP_COUNT];
         for (int i = 0; i < STEP_COUNT; i++) {
@@ -167,23 +193,23 @@ public class HandheldOnboardingActivity extends Activity {
             mProgressSegments[i] = segment;
         }
 
-        ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setClipToPadding(false);
-        scroll.setVerticalScrollBarEnabled(false);
+        mPageScroll = new ScrollView(this);
+        mPageScroll.setFillViewport(true);
+        mPageScroll.setClipToPadding(false);
+        mPageScroll.setVerticalScrollBarEnabled(false);
         LinearLayout.LayoutParams scrollParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f);
-        shell.addView(scroll, scrollParams);
+        shell.addView(mPageScroll, scrollParams);
         FrameLayout pageFrame = new FrameLayout(this);
         pageFrame.setClipChildren(false);
         pageFrame.setClipToPadding(false);
-        scroll.addView(pageFrame, new ScrollView.LayoutParams(
+        mPageScroll.addView(pageFrame, new ScrollView.LayoutParams(
                 ScrollView.LayoutParams.MATCH_PARENT, ScrollView.LayoutParams.WRAP_CONTENT));
         mPageContent = new LinearLayout(this);
         mPageContent.setOrientation(LinearLayout.VERTICAL);
         mPageContent.setClipChildren(false);
         mPageContent.setClipToPadding(false);
-        mPageContent.setPadding(0, dp(13), 0, dp(24));
+        mPageContent.setPadding(0, dp(mLandscapeLayout ? 7 : 13), 0, dp(mLandscapeLayout ? 12 : 24));
         pageFrame.addView(mPageContent, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT,
                 Gravity.CENTER_VERTICAL));
@@ -192,13 +218,18 @@ public class HandheldOnboardingActivity extends Activity {
         footer.setGravity(Gravity.CENTER_VERTICAL);
         footer.setOrientation(LinearLayout.HORIZONTAL);
         shell.addView(footer, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(54)));
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(mLandscapeLayout ? 48 : 54)));
 
         mBackButton = new Button(this);
         mBackButton.setText(R.string.onboarding_back);
         styleButton(mBackButton, false);
-        footer.addView(mBackButton, new LinearLayout.LayoutParams(0, dp(48), 1f));
+        int footerButtonHeight = dp(mLandscapeLayout ? 42 : 48);
+        footer.addView(mBackButton, new LinearLayout.LayoutParams(0, footerButtonHeight, 1f));
         mBackButton.setOnClickListener(v -> {
+            if (mThemeOnly) {
+                finish();
+                return;
+            }
             if (mStep > 0) {
                 mStep--;
                 renderStep(true);
@@ -212,15 +243,19 @@ public class HandheldOnboardingActivity extends Activity {
         mSkipButton.setBackgroundColor(Color.TRANSPARENT);
         applyCustomFocus(mSkipButton, dp(15));
         footer.addView(mSkipButton, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(48)));
+                LinearLayout.LayoutParams.WRAP_CONTENT, footerButtonHeight));
         mSkipButton.setOnClickListener(v -> finishSetup());
 
         mNextButton = new Button(this);
         styleButton(mNextButton, true);
-        LinearLayout.LayoutParams nextParams = new LinearLayout.LayoutParams(0, dp(48), 1.25f);
+        LinearLayout.LayoutParams nextParams = new LinearLayout.LayoutParams(0, footerButtonHeight, 1.25f);
         nextParams.leftMargin = dp(6);
         footer.addView(mNextButton, nextParams);
         mNextButton.setOnClickListener(v -> {
+            if (mThemeOnly) {
+                finish();
+                return;
+            }
             if (mStep < STEP_COUNT - 1) {
                 mStep++;
                 renderStep(true);
@@ -232,8 +267,10 @@ public class HandheldOnboardingActivity extends Activity {
         setContentView(mRoot);
         if (Build.VERSION.SDK_INT >= 20) {
             mRoot.setOnApplyWindowInsetsListener((view, insets) -> {
-                shell.setPadding(dp(22), dp(14) + insets.getSystemWindowInsetTop(),
-                        dp(22), dp(12) + insets.getSystemWindowInsetBottom());
+                shell.setPadding(horizontalPadding + insets.getSystemWindowInsetLeft(),
+                        topPadding + insets.getSystemWindowInsetTop(),
+                        horizontalPadding + insets.getSystemWindowInsetRight(),
+                        bottomPadding + insets.getSystemWindowInsetBottom());
                 return insets.consumeSystemWindowInsets();
             });
         }
@@ -241,14 +278,17 @@ public class HandheldOnboardingActivity extends Activity {
 
     private void renderStep(boolean animate) {
         if (mPageContent == null) return;
-        mStepCounter.setText(getString(R.string.onboarding_step_counter, mStep + 1, STEP_COUNT));
+        mStepCounter.setText(mThemeOnly ? getString(R.string.handheld_settings_appearance)
+                : getString(R.string.onboarding_step_counter, mStep + 1, STEP_COUNT));
         for (int i = 0; i < mProgressSegments.length; i++) {
             mProgressSegments[i].setBackground(makeRounded(i <= mStep ? COLOR_ACCENT : 0x443d5a67, dp(3)));
+            mProgressSegments[i].setVisibility(mThemeOnly ? View.INVISIBLE : View.VISIBLE);
         }
-        mBackButton.setVisibility(mStep == 0 ? View.INVISIBLE : View.VISIBLE);
-        mSkipButton.setVisibility(View.VISIBLE);
+        mBackButton.setVisibility(mThemeOnly || mStep > 0 ? View.VISIBLE : View.INVISIBLE);
+        mSkipButton.setVisibility(mThemeOnly ? View.GONE : View.VISIBLE);
         mSkipButton.setText(mStep == STEP_COUNT - 1 ? R.string.onboarding_skip : R.string.onboarding_skip);
-        mNextButton.setText(mStep == STEP_COUNT - 1 ? R.string.onboarding_finish : R.string.onboarding_continue);
+        mNextButton.setText(mThemeOnly ? R.string.handheld_theme_done
+                : mStep == STEP_COUNT - 1 ? R.string.onboarding_finish : R.string.onboarding_continue);
         mPageContent.removeAllViews();
         mThemeCards.clear();
 
@@ -257,6 +297,7 @@ public class HandheldOnboardingActivity extends Activity {
         else if (mStep == 1) page = buildThemeStep();
         else if (mStep == 2) page = buildComfortStep();
         else page = buildReadyStep();
+        page = arrangePageForLandscape(page);
         mPageContent.addView(page, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
@@ -268,42 +309,136 @@ public class HandheldOnboardingActivity extends Activity {
         }
         // Start controller/keyboard navigation on a real action. This also
         // makes the onboarding's custom focus treatment visible immediately.
-        mNextButton.post(() -> {
-            if (mNextButton.getVisibility() == View.VISIBLE && !mNextButton.hasFocus()) {
-                mNextButton.requestFocus();
-            }
-        });
-        if (Build.VERSION.SDK_INT >= 16) {
-            mRoot.announceForAccessibility(getString(R.string.onboarding_step_counter, mStep + 1, STEP_COUNT));
+        if (mRestoredFocusKey != null) {
+            final String focusKey = mRestoredFocusKey;
+            final int scrollY = mRestoredScrollY;
+            mRestoredFocusKey = null;
+            mPageScroll.post(() -> {
+                mPageScroll.scrollTo(0, scrollY);
+                mPageContent.post(() -> {
+                    View target = findFocusableView(mPageContent, focusKey);
+                    if (target != null) target.requestFocus();
+                    else if (mNextButton.getVisibility() == View.VISIBLE) mNextButton.requestFocus();
+                });
+            });
+        } else {
+            mNextButton.post(() -> {
+                if (mNextButton.getVisibility() == View.VISIBLE && !mNextButton.hasFocus()) {
+                    mNextButton.requestFocus();
+                }
+            });
         }
+        if (Build.VERSION.SDK_INT >= 16) {
+            mRoot.announceForAccessibility(mThemeOnly ? getString(R.string.handheld_settings_appearance)
+                    : getString(R.string.onboarding_step_counter, mStep + 1, STEP_COUNT));
+        }
+    }
+
+    private View arrangePageForLandscape(View page) {
+        if (!mLandscapeLayout || !(page instanceof LinearLayout)) return page;
+
+        LinearLayout source = (LinearLayout) page;
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setClipChildren(false);
+        row.setClipToPadding(false);
+
+        LinearLayout left = pageColumn();
+        LinearLayout right = pageColumn();
+        left.setGravity(Gravity.CENTER_VERTICAL);
+        right.setGravity(Gravity.CENTER_VERTICAL);
+        left.setPadding(0, 0, dp(18), 0);
+
+        float leftWeight;
+        float rightWeight;
+        if (mStep == 1) {
+            leftWeight = 0.40f;
+            rightWeight = 0.60f;
+        } else if (mStep == 0) {
+            leftWeight = 0.46f;
+            rightWeight = 0.54f;
+        } else {
+            leftWeight = 0.48f;
+            rightWeight = 0.52f;
+        }
+        row.addView(left, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, leftWeight));
+        row.addView(right, new LinearLayout.LayoutParams(0,
+                LinearLayout.LayoutParams.WRAP_CONTENT, rightWeight));
+
+        int childIndex = 0;
+        while (source.getChildCount() > 0) {
+            View child = source.getChildAt(0);
+            source.removeViewAt(0);
+            (isLandscapeRightColumnChild(childIndex) ? right : left).addView(child);
+            childIndex++;
+        }
+        return row;
+    }
+
+    private boolean isLandscapeRightColumnChild(int index) {
+        if (mStep == 0 || mStep == 1) return index == 3;
+        if (mStep == 2) return index >= 5;
+        return index == 3;
+    }
+
+    private boolean isLandscapeLayout() {
+        return getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                getResources().getDisplayMetrics().widthPixels /
+                getResources().getDisplayMetrics().density >= 700f;
+    }
+
+    private String stableFocusKey(View view) {
+        if (view == null || view == mBackButton || view == mSkipButton || view == mNextButton) return null;
+        CharSequence description = view.getContentDescription();
+        if (description != null && description.length() > 0) return "description:" + description;
+        if (view instanceof TextView) {
+            CharSequence text = ((TextView) view).getText();
+            if (text != null && text.length() > 0) return "text:" + text;
+        }
+        return null;
+    }
+
+    private View findFocusableView(View root, String focusKey) {
+        if (root == null || focusKey == null) return null;
+        if (root.isFocusable() && focusKey.equals(stableFocusKey(root))) return root;
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View match = findFocusableView(group.getChildAt(i), focusKey);
+                if (match != null) return match;
+            }
+        }
+        return null;
     }
 
     private View buildWelcomeStep() {
         LinearLayout page = pageColumn();
         addEyebrow(page, R.string.onboarding_feature_controller);
-        addTitle(page, R.string.onboarding_welcome_title, 31);
+        addTitle(page, R.string.onboarding_welcome_title, mLandscapeLayout ? 27 : 31);
         addBody(page, R.string.onboarding_welcome_body);
 
         FrameLayout previewPanel = panel();
         LinearLayout.LayoutParams panelParams = matchWrap();
-        panelParams.topMargin = dp(22);
+        panelParams.topMargin = dp(mLandscapeLayout ? 9 : 22);
         page.addView(previewPanel, panelParams);
         KeyboardThemePreviewView preview = new KeyboardThemePreviewView(this);
         Palette palette = resolvePalette(mPrefs.getCurrentTheme());
         preview.setPalette(palette.background, palette.key, palette.text, palette.accent);
         preview.setThemeLabel(getString(R.string.onboarding_brand));
         previewPanel.addView(preview, new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT, dp(190)));
+                FrameLayout.LayoutParams.MATCH_PARENT, dp(mLandscapeLayout ? 142 : 190)));
 
         LinearLayout features = new LinearLayout(this);
         features.setOrientation(LinearLayout.HORIZONTAL);
         features.setGravity(Gravity.CENTER_VERTICAL);
-        features.setPadding(0, dp(17), 0, 0);
+        features.setPadding(0, dp(mLandscapeLayout ? 9 : 17), 0, 0);
         page.addView(features, matchWrap());
         addFeature(features, R.string.onboarding_feature_touch);
         addFeature(features, R.string.onboarding_feature_layouts);
         TextView note = text(R.string.onboarding_welcome_tip, 13, COLOR_MUTED, Typeface.NORMAL);
-        note.setPadding(0, dp(20), 0, 0);
+        note.setPadding(0, dp(mLandscapeLayout ? 10 : 20), 0, 0);
         page.addView(note, matchWrap());
         return page;
     }
@@ -311,16 +446,17 @@ public class HandheldOnboardingActivity extends Activity {
     private View buildThemeStep() {
         LinearLayout page = pageColumn();
         addEyebrow(page, R.string.onboarding_step_themes);
-        addTitle(page, R.string.onboarding_theme_title, 30);
+        addTitle(page, R.string.onboarding_theme_title, mLandscapeLayout ? 26 : 30);
         addBody(page, R.string.onboarding_theme_body);
 
         HorizontalScrollView carousel = new HorizontalScrollView(this);
         carousel.setHorizontalScrollBarEnabled(false);
         carousel.setClipToPadding(false);
         carousel.setOverScrollMode(View.OVER_SCROLL_IF_CONTENT_SCROLLS);
-        carousel.setPadding(dp(1), dp(17), dp(18), dp(8));
+        carousel.setPadding(dp(1), dp(mLandscapeLayout ? 7 : 17), dp(18),
+                dp(mLandscapeLayout ? 4 : 8));
         LinearLayout.LayoutParams carouselParams = matchWrap();
-        carouselParams.topMargin = dp(4);
+        carouselParams.topMargin = dp(mLandscapeLayout ? 0 : 4);
         page.addView(carousel, carouselParams);
         LinearLayout track = new LinearLayout(this);
         track.setOrientation(LinearLayout.HORIZONTAL);
@@ -331,17 +467,26 @@ public class HandheldOnboardingActivity extends Activity {
 
         String[] names = {getString(R.string.onboarding_theme_default), getString(R.string.onboarding_theme_steam),
                 getString(R.string.onboarding_theme_xbox), getString(R.string.onboarding_theme_switch),
+                getString(R.string.onboarding_theme_retroid_aurora),
+                getString(R.string.onboarding_theme_retroid_ember),
+                getString(R.string.onboarding_theme_retroid_quartz),
                 getString(R.string.onboarding_theme_night), getString(R.string.onboarding_theme_carbon),
                 getString(R.string.onboarding_theme_midnight), getString(R.string.onboarding_theme_custom)};
         String[] descriptions = {getString(R.string.onboarding_theme_default_desc),
                 getString(R.string.onboarding_theme_steam_desc), getString(R.string.onboarding_theme_xbox_desc),
-                getString(R.string.onboarding_theme_switch_desc), getString(R.string.onboarding_theme_night_desc),
+                getString(R.string.onboarding_theme_switch_desc),
+                getString(R.string.onboarding_theme_retroid_aurora_desc),
+                getString(R.string.onboarding_theme_retroid_ember_desc),
+                getString(R.string.onboarding_theme_retroid_quartz_desc),
+                getString(R.string.onboarding_theme_night_desc),
                 getString(R.string.onboarding_theme_carbon_desc), getString(R.string.onboarding_theme_midnight_desc),
                 getString(R.string.onboarding_theme_custom_desc)};
         String[] ids = {LeanKeyPreferences.THEME_DEFAULT, "SteamDeck", "Xbox", "Switch",
+                "RetroidAurora", "RetroidEmber", "RetroidQuartz",
                 LeanKeyPreferences.THEME_DARK, LeanKeyPreferences.THEME_DARK2,
                 LeanKeyPreferences.THEME_DARK3, LeanKeyPreferences.THEME_CUSTOM};
-        int width = Math.min(dp(270), Math.max(dp(226), getResources().getDisplayMetrics().widthPixels - dp(70)));
+        int width = mLandscapeLayout ? dp(246) : Math.min(dp(270),
+                Math.max(dp(226), getResources().getDisplayMetrics().widthPixels - dp(70)));
         for (int i = 0; i < ids.length; i++) {
             ThemeCard card = createThemeCard(ids[i], names[i], descriptions[i], width);
             LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(width,
@@ -356,8 +501,8 @@ public class HandheldOnboardingActivity extends Activity {
         edit.setText(R.string.onboarding_theme_edit);
         styleButton(edit, false);
         LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(48));
-        editParams.topMargin = dp(12);
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(mLandscapeLayout ? 42 : 48));
+        editParams.topMargin = dp(mLandscapeLayout ? 6 : 12);
         page.addView(edit, editParams);
         edit.setOnClickListener(v -> openThemeEditor());
 
@@ -365,7 +510,7 @@ public class HandheldOnboardingActivity extends Activity {
         addBody(page, R.string.onboarding_appearance_note);
         LinearLayout appearance = new LinearLayout(this);
         appearance.setOrientation(LinearLayout.HORIZONTAL);
-        appearance.setPadding(0, dp(11), 0, 0);
+        appearance.setPadding(0, dp(mLandscapeLayout ? 6 : 11), 0, 0);
         page.addView(appearance, matchWrap());
         addAppearanceChip(appearance, LeanKeyPreferences.APPEARANCE_SYSTEM, R.string.onboarding_system);
         addAppearanceChip(appearance, LeanKeyPreferences.APPEARANCE_LIGHT, R.string.onboarding_light);
@@ -388,11 +533,12 @@ public class HandheldOnboardingActivity extends Activity {
         preview.setPulseEnabled(false);
         preview.setPalette(palette.background, palette.key, palette.text, palette.accent);
         preview.setThemeLabel(name);
-        if (LeanKeyPreferences.THEME_CUSTOM.equals(themeId)) {
-            preview.setBackgroundImage(loadThemeImage(mPrefs.getCustomThemeImagePath(mPrefs.isDarkAppearance())));
-        }
+        Bitmap backgroundImage = LeanKeyPreferences.THEME_CUSTOM.equals(themeId)
+                ? loadThemeImage(mPrefs.getCustomThemeImagePath(mPrefs.isDarkAppearance()))
+                : loadBuiltInThemeImage(themeId);
+        preview.setBackgroundImage(backgroundImage);
         LinearLayout.LayoutParams previewParams = matchWrap();
-        previewParams.height = dp(126);
+        previewParams.height = dp(mLandscapeLayout ? 104 : 126);
         container.addView(preview, previewParams);
 
         LinearLayout titleRow = new LinearLayout(this);
@@ -417,6 +563,9 @@ public class HandheldOnboardingActivity extends Activity {
         ThemeCard card = new ThemeCard(themeId, container, preview, selected);
         container.setOnClickListener(v -> {
             mPrefs.setCurrentTheme(themeId);
+            // Apply the same selection to the live IME immediately. Otherwise
+            // its previous palette can remain visible until the next input field.
+            sendBroadcast(new Intent(this, RestartServiceReceiver.class));
             updateThemeCardSelection();
             v.animate().scaleX(0.985f).scaleY(0.985f).setDuration(75L)
                     .withEndAction(() -> v.animate().scaleX(1f).scaleY(1f).setDuration(110L).start()).start();
@@ -443,20 +592,21 @@ public class HandheldOnboardingActivity extends Activity {
     private View buildComfortStep() {
         LinearLayout page = pageColumn();
         addEyebrow(page, R.string.onboarding_screen_shape);
-        addTitle(page, R.string.onboarding_comfort_title, 30);
+        addTitle(page, R.string.onboarding_comfort_title, mLandscapeLayout ? 26 : 30);
         addBody(page, R.string.onboarding_comfort_body);
 
         LinearLayout heightPanel = panelColumn();
         LinearLayout.LayoutParams heightParams = matchWrap();
-        heightParams.topMargin = dp(18);
+        heightParams.topMargin = dp(mLandscapeLayout ? 8 : 18);
         page.addView(heightPanel, heightParams);
         final int savedHeight = KeyboardLayoutPreferences.getKeyboardHeightPercent(this);
         final int initialHeight = savedHeight == KeyboardLayoutPreferences.HEIGHT_AUTO
                 ? 41 : savedHeight;
         TextView heightLabel = text(getString(R.string.onboarding_height_value, initialHeight),
-                15, COLOR_TEXT, Typeface.BOLD);
+                mLandscapeLayout ? 14 : 15, COLOR_TEXT, Typeface.BOLD);
         heightPanel.addView(heightLabel, matchWrap());
         SeekBar height = new SeekBar(this);
+        height.setContentDescription(getString(R.string.onboarding_height_value, initialHeight));
         applyCustomFocus(height, dp(12));
         height.setMax(KeyboardLayoutPreferences.MAX_HEIGHT_PERCENT - KeyboardLayoutPreferences.MIN_HEIGHT_PERCENT);
         height.setProgress(initialHeight - KeyboardLayoutPreferences.MIN_HEIGHT_PERCENT);
@@ -477,6 +627,7 @@ public class HandheldOnboardingActivity extends Activity {
             @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 int value = progress + KeyboardLayoutPreferences.MIN_HEIGHT_PERCENT;
                 heightLabel.setText(getString(R.string.onboarding_height_value, value));
+                height.setContentDescription(getString(R.string.onboarding_height_value, value));
                 if (fromUser) {
                     autoHeight.setChecked(false);
                     KeyboardLayoutPreferences.setKeyboardHeightPercent(HandheldOnboardingActivity.this, value);
@@ -501,10 +652,11 @@ public class HandheldOnboardingActivity extends Activity {
         LinearLayout floatingPanel = new LinearLayout(this);
         floatingPanel.setGravity(Gravity.CENTER_VERTICAL);
         floatingPanel.setOrientation(LinearLayout.HORIZONTAL);
-        floatingPanel.setPadding(dp(16), dp(12), dp(12), dp(12));
+        floatingPanel.setPadding(dp(mLandscapeLayout ? 12 : 16), dp(mLandscapeLayout ? 8 : 12),
+                dp(mLandscapeLayout ? 8 : 12), dp(mLandscapeLayout ? 8 : 12));
         floatingPanel.setBackground(makeRounded(COLOR_PANEL, dp(16)));
         LinearLayout.LayoutParams floatingParams = matchWrap();
-        floatingParams.topMargin = dp(12);
+        floatingParams.topMargin = dp(mLandscapeLayout ? 8 : 12);
         page.addView(floatingPanel, floatingParams);
         LinearLayout floatingText = new LinearLayout(this);
         floatingText.setOrientation(LinearLayout.VERTICAL);
@@ -512,7 +664,7 @@ public class HandheldOnboardingActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         floatingText.addView(text(R.string.onboarding_floating, 15, COLOR_TEXT, Typeface.BOLD), matchWrap());
         TextView floatingDesc = text(R.string.onboarding_floating_desc, 12, COLOR_MUTED, Typeface.NORMAL);
-        floatingDesc.setPadding(0, dp(3), 0, 0);
+        floatingDesc.setPadding(0, dp(2), 0, 0);
         floatingText.addView(floatingDesc, matchWrap());
         Switch floating = new Switch(this);
         applyCustomFocus(floating, dp(18));
@@ -543,7 +695,7 @@ public class HandheldOnboardingActivity extends Activity {
                     });
         }
         LinearLayout.LayoutParams profileParams = matchWrap();
-        profileParams.topMargin = dp(7);
+        profileParams.topMargin = dp(mLandscapeLayout ? 4 : 7);
         page.addView(profileScroll, profileParams);
 
         addSectionLabel(page, R.string.onboarding_surface_title);
@@ -560,7 +712,7 @@ public class HandheldOnboardingActivity extends Activity {
         addSurfaceChip(surfaceRow, R.string.onboarding_surface_glass, LeanKeyPreferences.SURFACE_GLASS);
         addSurfaceChip(surfaceRow, R.string.onboarding_surface_liquid, LeanKeyPreferences.SURFACE_LIQUID);
         LinearLayout.LayoutParams surfaceParams = matchWrap();
-        surfaceParams.topMargin = dp(7);
+        surfaceParams.topMargin = dp(mLandscapeLayout ? 4 : 7);
         page.addView(surfaceScroll, surfaceParams);
         return page;
     }
@@ -594,12 +746,12 @@ public class HandheldOnboardingActivity extends Activity {
     private View buildReadyStep() {
         LinearLayout page = pageColumn();
         addEyebrow(page, R.string.onboarding_step_ready);
-        addTitle(page, R.string.onboarding_ready_title, 31);
+        addTitle(page, R.string.onboarding_ready_title, mLandscapeLayout ? 27 : 31);
         addBody(page, R.string.onboarding_ready_body);
 
         LinearLayout statusPanel = panelColumn();
         LinearLayout.LayoutParams panelParams = matchWrap();
-        panelParams.topMargin = dp(22);
+        panelParams.topMargin = dp(mLandscapeLayout ? 8 : 22);
         page.addView(statusPanel, panelParams);
         View statusDot = new View(this);
         LinearLayout statusRow = new LinearLayout(this);
@@ -619,7 +771,7 @@ public class HandheldOnboardingActivity extends Activity {
         settings.setText(R.string.onboarding_open_ime_settings);
         styleButton(settings, true);
         LinearLayout.LayoutParams settingsParams = matchWrap();
-        settingsParams.topMargin = dp(18);
+        settingsParams.topMargin = dp(mLandscapeLayout ? 8 : 18);
         statusPanel.addView(settings, settingsParams);
         settings.setOnClickListener(v -> openImeSettings());
 
@@ -627,7 +779,7 @@ public class HandheldOnboardingActivity extends Activity {
         picker.setText(R.string.onboarding_choose_keyboard);
         styleButton(picker, false);
         LinearLayout.LayoutParams pickerParams = matchWrap();
-        pickerParams.topMargin = dp(8);
+        pickerParams.topMargin = dp(mLandscapeLayout ? 5 : 8);
         statusPanel.addView(picker, pickerParams);
         picker.setEnabled(isKeyboardEnabled());
         picker.setAlpha(picker.isEnabled() ? 1f : 0.45f);
@@ -635,7 +787,7 @@ public class HandheldOnboardingActivity extends Activity {
 
         TextView finishNote = text(R.string.onboarding_ready_saved, 13, COLOR_ACCENT, Typeface.BOLD);
         finishNote.setGravity(Gravity.CENTER);
-        finishNote.setPadding(0, dp(22), 0, 0);
+        finishNote.setPadding(0, dp(mLandscapeLayout ? 12 : 22), 0, 0);
         page.addView(finishNote, matchWrap());
         return page;
     }
@@ -651,15 +803,17 @@ public class HandheldOnboardingActivity extends Activity {
     private void addSelectionChip(LinearLayout row, String label, boolean selected, Runnable action) {
         TextView chip = text(label, 12, selected ? COLOR_BACKGROUND : COLOR_TEXT, Typeface.BOLD);
         chip.setGravity(Gravity.CENTER);
-        chip.setPadding(dp(14), dp(9), dp(14), dp(9));
+        chip.setPadding(dp(mLandscapeLayout ? 12 : 14), dp(mLandscapeLayout ? 7 : 9),
+                dp(mLandscapeLayout ? 12 : 14), dp(mLandscapeLayout ? 7 : 9));
         chip.setBackground(makeRounded(selected ? COLOR_ACCENT : 0xff203541, dp(18),
                 selected ? COLOR_ACCENT : 0x555a7a86, dp(1)));
         chip.setClickable(true);
         chip.setFocusable(true);
+        chip.setContentDescription(label);
         applyCustomFocus(chip, dp(18));
         chip.setOnClickListener(v -> action.run());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(40));
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(mLandscapeLayout ? 36 : 40));
         params.rightMargin = dp(7);
         row.addView(chip, params);
     }
@@ -774,7 +928,7 @@ public class HandheldOnboardingActivity extends Activity {
         TextView eyebrow = text(textRes, 11, COLOR_ACCENT, Typeface.BOLD);
         eyebrow.setLetterSpacing(0.08f);
         LinearLayout.LayoutParams params = matchWrap();
-        params.bottomMargin = dp(8);
+        params.bottomMargin = dp(mLandscapeLayout ? 5 : 8);
         parent.addView(eyebrow, params);
     }
 
@@ -783,13 +937,13 @@ public class HandheldOnboardingActivity extends Activity {
         title.setLineSpacing(dp(1), 0.96f);
         title.setMaxWidth(dp(620));
         LinearLayout.LayoutParams params = matchWrap();
-        params.bottomMargin = dp(8);
+        params.bottomMargin = dp(mLandscapeLayout ? 5 : 8);
         parent.addView(title, params);
     }
 
     private void addBody(LinearLayout parent, int textRes) {
         TextView body = text(textRes, 15, COLOR_MUTED, Typeface.NORMAL);
-        body.setLineSpacing(dp(4), 1.0f);
+        body.setLineSpacing(dp(mLandscapeLayout ? 2 : 4), 1.0f);
         body.setMaxWidth(dp(620));
         parent.addView(body, matchWrap());
     }
@@ -797,7 +951,7 @@ public class HandheldOnboardingActivity extends Activity {
     private void addSectionLabel(LinearLayout parent, int textRes) {
         TextView label = text(textRes, 16, COLOR_TEXT, Typeface.BOLD);
         LinearLayout.LayoutParams params = matchWrap();
-        params.topMargin = dp(22);
+        params.topMargin = dp(mLandscapeLayout ? 12 : 22);
         params.bottomMargin = dp(4);
         parent.addView(label, params);
     }
@@ -820,7 +974,8 @@ public class HandheldOnboardingActivity extends Activity {
     private LinearLayout panelColumn() {
         LinearLayout panel = new LinearLayout(this);
         panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setPadding(dp(16), dp(15), dp(16), dp(15));
+        panel.setPadding(dp(mLandscapeLayout ? 12 : 16), dp(mLandscapeLayout ? 10 : 15),
+                dp(mLandscapeLayout ? 12 : 16), dp(mLandscapeLayout ? 10 : 15));
         panel.setBackground(makeRounded(COLOR_PANEL, dp(18), 0x335c7b86, dp(1)));
         return panel;
     }
@@ -986,7 +1141,8 @@ public class HandheldOnboardingActivity extends Activity {
                 : namedColor("key_text_default_" + suffix, fallbackText);
         int accent = id.equals(LeanKeyPreferences.THEME_DEFAULT) ? color(R.color.candidate_font_color)
                 : namedColor("candidate_font_color_" + suffix, color(R.color.candidate_font_color));
-        return new Palette(background, blend(background, text, 0.14f), text, accent);
+        int key = namedColor("key_background_" + suffix, blend(background, text, 0.14f));
+        return new Palette(background, key, text, accent);
     }
 
     private int namedColor(String name, int fallback) {
@@ -1024,6 +1180,23 @@ public class HandheldOnboardingActivity extends Activity {
         options.inSampleSize = sample;
         options.inPreferredConfig = Bitmap.Config.RGB_565;
         return BitmapFactory.decodeFile(path, options);
+    }
+
+    /** Uses a memory-scaled copy of the packaged Retroid artwork in the theme carousel. */
+    private Bitmap loadBuiltInThemeImage(String themeId) {
+        int resourceId = getResources().getIdentifier(
+                "theme_background_" + themeId.toLowerCase(java.util.Locale.ROOT),
+                "drawable", getPackageName());
+        if (resourceId == 0) return null;
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(getResources(), resourceId, bounds);
+        int sample = 1;
+        while (bounds.outWidth / sample > 512 || bounds.outHeight / sample > 512) sample *= 2;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sample;
+        options.inPreferredConfig = Bitmap.Config.RGB_565;
+        return BitmapFactory.decodeResource(getResources(), resourceId, options);
     }
 
     private void refreshThemeChips() {

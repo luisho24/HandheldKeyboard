@@ -33,7 +33,7 @@
     <string name="kb_settings_desc">Nastavitve tipkovnice</string>
     <string name="activate_keyboard">Omogoci tipkovnico</string>
     <string name="change_layout">Spremeni postavitev</string>
-    <string name="enable_kb_in_system_prefs">%s morate omogociti v sistemskih nastavitvah</string>
+    <string name="enable_kb_in_system_prefs">%1$s morate omogociti v sistemskih nastavitvah</string>
     <string name="about">Dogovor o</string>
     <string name="about_desc">O aplikaciji</string>
     <string name="keep_on_screen_desc">Naj bo na zaslonu, medtem ko je fizicna tipkovnica aktivna</string>
@@ -43,7 +43,7 @@
     <string name="keyboardview_keycode_clipboard">Izrez</string>
     <string name="increase_kbd_size">Povecaj tipkovnico</string>
     <string name="increase_kbd_size_desc">Povecaj velikost tipkovnice</string>
-    <string name="kbd_activation_error2">Prislo je do napake. Poskusi omogociti %s s spodnjimi ukazi. \n \n%s \n\n%s</string>
+    <string name="kbd_activation_error2">Prislo je do napake. Poskusi omogociti %1$s s spodnjimi ukazi. \n \n%2$s \n\n%3$s</string>
     <string name="about_donate">Doniraj</string>
     <string name="about_web_site">Domaca stran</string>
     <string name="kbd_activation_error">Sistemskih nastavitev kbd ni mogoce odpreti. \n Pocakaj na spletno mesto z rocnimi navodili ...</string>

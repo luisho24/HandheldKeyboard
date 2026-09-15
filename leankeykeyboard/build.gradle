@@ -25,7 +25,7 @@ android {
         versionCode 199
         versionName "6.1.29"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
     buildTypes {
@@ -78,17 +78,17 @@ android {
         }
         handheld {
             applicationId "com.handheldkeyboard.ime"
-            versionCode 8
-            versionName "0.4.3"
+            versionCode 9
+            versionName "0.4.4"
         }
     }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestImplementation(project.properties.espressoCoreVersion, {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
+    androidTestImplementation "androidx.test:core:${project.properties.androidXTestCoreVersion}"
+    androidTestImplementation "androidx.test:runner:${project.properties.androidXTestRunnerVersion}"
+    androidTestImplementation "androidx.test.ext:junit:${project.properties.androidXTestExtJunitVersion}"
     testImplementation project.properties.junitVersion
     implementation project.properties.appCompatXVersion
     implementation project.properties.leanbackCompatXVersion

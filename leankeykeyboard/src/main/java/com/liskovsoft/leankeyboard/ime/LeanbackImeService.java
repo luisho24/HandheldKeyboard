@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.inputmethodservice.InputMethodService;
 import android.os.Build.VERSION;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -16,8 +17,10 @@ import android.view.View;
 import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import com.liskovsoft.leankeyboard.ime.LeanbackKeyboardController.InputListener;
 import com.liskovsoft.leankeyboard.utils.LeanKeyPreferences;
+import com.liskovsoft.leankeyboard.utils.UnicodeTextUtils;
 
 public class LeanbackImeService extends KeyMapperImeService {
     private static final String TAG = LeanbackImeService.class.getSimpleName();
@@ -38,7 +41,7 @@ public class LeanbackImeService extends KeyMapperImeService {
     private boolean mForceShowKbd;
 
     @SuppressLint("HandlerLeak")
-    private final Handler mHandler = new Handler() {
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         public void handleMessage(Message msg) {
             if (msg.what == MSG_SUGGESTIONS_CLEAR && mShouldClearSuggestions) {
                 mSuggestionsFactory.clearSuggestions();
@@ -120,7 +123,14 @@ public class LeanbackImeService extends KeyMapperImeService {
                     break;
                 case InputListener.ENTRY_TYPE_BACKSPACE:
                     clearSuggestionsDelayed();
-                    connection.deleteSurroundingText(1, 0);
+                    CharSequence selectedText = connection.getSelectedText(0);
+                    if (selectedText != null && selectedText.length() > 0) {
+                        connection.commitText("", 1);
+                    } else {
+                        CharSequence textBeforeCursor = connection.getTextBeforeCursor(128, 0);
+                        int deleteLength = UnicodeTextUtils.previousGraphemeLength(textBeforeCursor);
+                        connection.deleteSurroundingText(Math.max(1, deleteLength), 0);
+                    }
                     mEnterSpaceBeforeCommitting = false;
                     updateSuggestions = true;
                     break;
@@ -150,12 +160,61 @@ public class LeanbackImeService extends KeyMapperImeService {
                     break;
                 case InputListener.ENTRY_TYPE_LEFT:
                 case InputListener.ENTRY_TYPE_RIGHT:
+                case InputListener.ENTRY_TYPE_UP:
+                case InputListener.ENTRY_TYPE_DOWN:
                     // Let the focused editor move its own caret. It knows the actual
                     // selection offset and visual bidi order, and can keep surrogate
                     // pairs/emoji together. Reconstructing an absolute index from a
                     // truncated before/after text window breaks for long and RTL text.
-                    sendDownUpKeyEvents(type == InputListener.ENTRY_TYPE_LEFT
-                            ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT);
+                    int direction = type == InputListener.ENTRY_TYPE_LEFT
+                            ? KeyEvent.KEYCODE_DPAD_LEFT
+                            : type == InputListener.ENTRY_TYPE_RIGHT
+                            ? KeyEvent.KEYCODE_DPAD_RIGHT
+                            : type == InputListener.ENTRY_TYPE_UP
+                            ? KeyEvent.KEYCODE_DPAD_UP
+                            : KeyEvent.KEYCODE_DPAD_DOWN;
+                    sendDownUpKeyEvents(direction);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_HOME:
+                    sendDownUpKeyEvents(KeyEvent.KEYCODE_MOVE_HOME);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_END:
+                    sendDownUpKeyEvents(KeyEvent.KEYCODE_MOVE_END);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_SELECT_LEFT:
+                case InputListener.ENTRY_TYPE_SELECT_RIGHT:
+                case InputListener.ENTRY_TYPE_SELECT_UP:
+                case InputListener.ENTRY_TYPE_SELECT_DOWN:
+                    int selectDirection = type == InputListener.ENTRY_TYPE_SELECT_LEFT
+                            ? KeyEvent.KEYCODE_DPAD_LEFT
+                            : type == InputListener.ENTRY_TYPE_SELECT_RIGHT
+                            ? KeyEvent.KEYCODE_DPAD_RIGHT
+                            : type == InputListener.ENTRY_TYPE_SELECT_UP
+                            ? KeyEvent.KEYCODE_DPAD_UP : KeyEvent.KEYCODE_DPAD_DOWN;
+                    sendModifiedDownUpKeyEvents(connection, selectDirection, KeyEvent.META_SHIFT_ON);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_UNDO:
+                    sendModifiedDownUpKeyEvents(connection, KeyEvent.KEYCODE_Z, KeyEvent.META_CTRL_ON);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_REDO:
+                    sendModifiedDownUpKeyEvents(connection, KeyEvent.KEYCODE_Y, KeyEvent.META_CTRL_ON);
+                    updateSuggestions = true;
+                    break;
+                case InputListener.ENTRY_TYPE_TAB:
+                    sendDownUpKeyEvents(KeyEvent.KEYCODE_TAB);
+                    updateSuggestions = false;
+                    break;
+                case InputListener.ENTRY_TYPE_ESCAPE:
+                    sendDownUpKeyEvents(KeyEvent.KEYCODE_ESCAPE);
+                    updateSuggestions = false;
+                    break;
+                case InputListener.ENTRY_TYPE_SELECT_ALL:
+                    connection.performContextMenuAction(android.R.id.selectAll);
                     updateSuggestions = true;
                     break;
                 case InputListener.ENTRY_TYPE_DISMISS:
@@ -174,6 +233,14 @@ public class LeanbackImeService extends KeyMapperImeService {
                 mKeyboardController.updateSuggestions(mSuggestionsFactory.getSuggestions());
             }
         }
+    }
+
+    private static void sendModifiedDownUpKeyEvents(InputConnection connection, int keyCode, int metaState) {
+        long now = System.currentTimeMillis();
+        connection.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0,
+                metaState));
+        connection.sendKeyEvent(new KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0,
+                metaState));
     }
 
     @Override
@@ -240,7 +307,7 @@ public class LeanbackImeService extends KeyMapperImeService {
     }
 
     public void hideIme() {
-        requestHideSelf(InputMethodService.BACK_DISPOSITION_DEFAULT);
+        requestHideSelf(InputMethodManager.HIDE_NOT_ALWAYS);
     }
 
     @Override

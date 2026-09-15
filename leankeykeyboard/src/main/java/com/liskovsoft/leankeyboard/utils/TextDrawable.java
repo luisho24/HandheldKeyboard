@@ -101,6 +101,7 @@ public class TextDrawable extends Drawable {
         this(context, null);
     }
     
+    @android.annotation.SuppressLint("ResourceType")
     public TextDrawable(Context context, Drawable drawable) {
         super();
         mDrawable = drawable;
@@ -136,16 +137,16 @@ public class TextDrawable extends Drawable {
                 int attr = ap.getIndex(i);
                 switch (attr) {
                     case 0: //Text Size
-                        textSize = a.getDimensionPixelSize(attr, textSize);
+                        textSize = ap.getDimensionPixelSize(attr, textSize);
                         break;
                     case 1: //Typeface
-                        typefaceIndex = a.getInt(attr, typefaceIndex);
+                        typefaceIndex = ap.getInt(attr, typefaceIndex);
                         break;
                     case 2: //Text Style
-                        styleIndex = a.getInt(attr, styleIndex);
+                        styleIndex = ap.getInt(attr, styleIndex);
                         break;
                     case 3: //Text Color
-                        textColor = a.getColorStateList(attr);
+                        textColor = ap.getColorStateList(attr);
                         break;
                     default:
                         break;

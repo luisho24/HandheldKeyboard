@@ -33,7 +33,7 @@
     <string name="kb_settings_desc">Настройки на клавиатурата</string>
     <string name="activate_keyboard">Активирайте клавиатурата</string>
     <string name="change_layout">Промяна на оформлението</string>
-    <string name="enable_kb_in_system_prefs">Трябва да активирате %s в системни предпочитания</string>
+    <string name="enable_kb_in_system_prefs">Трябва да активирате %1$s в системни предпочитания</string>
     <string name="about">относно</string>
     <string name="about_desc">Относно приложението</string>
     <string name="keep_on_screen_desc">Дръжте го на екрана, докато физическата клавиатура е активна</string>
@@ -43,7 +43,7 @@
     <string name="keyboardview_keycode_clipboard">клипборда</string>
     <string name="increase_kbd_size">Уголемяване на клавиатурата</string>
     <string name="increase_kbd_size_desc">Увеличете размера на клавиатурата</string>
-    <string name="kbd_activation_error2">Възникна грешка. Опитайте да активирате %s с команди по-долу. \n \n%s \n\n%s</string>
+    <string name="kbd_activation_error2">Възникна грешка. Опитайте да активирате %1$s с команди по-долу. \n \n%2$s \n\n%3$s</string>
     <string name="about_donate">Дарете</string>
     <string name="about_web_site">Уеб сайт</string>
     <string name="kbd_activation_error">Не мога да отворя настройките на системния kbd. \nПренасочване към сайта с ръчни инструкции …</string>

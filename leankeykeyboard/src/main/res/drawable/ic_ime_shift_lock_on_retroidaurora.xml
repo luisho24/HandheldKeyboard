@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- A compact directional chevron with a Retroid-style illuminated lock indicator. -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,2L3,11h5v7h8v-7h5L12,2zM10,12h4v4h-4z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M8,19h8v3H8z" />
+</vector>

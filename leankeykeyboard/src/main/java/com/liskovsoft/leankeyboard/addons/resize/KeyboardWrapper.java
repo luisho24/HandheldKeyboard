@@ -11,6 +11,7 @@ import java.util.List;
 public class KeyboardWrapper extends Keyboard {
     private Keyboard mKeyboard;
     private int mHeight = -1;
+    private int mWidth = -1;
     private float mHeightFactor = 1.0f;
     private float mWidthFactor = 1.0f;
 
@@ -53,6 +54,9 @@ public class KeyboardWrapper extends Keyboard {
 
     @Override
     public int getHeight() {
+        if (mHeight > 0) {
+            return mHeight;
+        }
         int contentHeight = 0;
         for (Key key : mKeyboard.getKeys()) {
             contentHeight = Math.max(contentHeight, key.y + key.height);
@@ -62,6 +66,9 @@ public class KeyboardWrapper extends Keyboard {
 
     @Override
     public int getMinWidth() {
+        if (mWidth > 0) {
+            return mWidth;
+        }
         int contentWidth = 0;
         for (Key key : mKeyboard.getKeys()) {
             contentWidth = Math.max(contentWidth, key.x + key.width);
@@ -100,6 +107,12 @@ public class KeyboardWrapper extends Keyboard {
 
     public void setWidthFactor(float factor) {
         mWidthFactor = factor;
+    }
+
+    /** Keeps the view bounds aligned with a reflowed keyboard grid. */
+    public void setContentSize(int width, int height) {
+        mWidth = Math.max(1, width);
+        mHeight = Math.max(1, height);
     }
 
     /**

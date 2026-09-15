@@ -33,7 +33,7 @@
     <string name="kb_settings_desc">Tangentbordsinställningar</string>
     <string name="activate_keyboard">Aktivera tangentbordet</string>
     <string name="change_layout">Byt layout</string>
-    <string name="enable_kb_in_system_prefs">Du måste aktivera %s i Systeminställningar</string>
+    <string name="enable_kb_in_system_prefs">Du måste aktivera %1$s i Systeminställningar</string>
     <string name="about">Handla om</string>
     <string name="about_desc">Om ansökan</string>
     <string name="keep_on_screen_desc">Förvara den på skärmen medan det fysiska tangentbordet är aktivt</string>
@@ -43,7 +43,7 @@
     <string name="keyboardview_keycode_clipboard">Urklipp</string>
     <string name="increase_kbd_size">Förstora tangentbordet</string>
     <string name="increase_kbd_size_desc">Öka tangentbordets storlek</string>
-    <string name="kbd_activation_error2">Fel inträffade. Försök att aktivera %s med kommandon nedan. \n \n%s \n\n%s</string>
+    <string name="kbd_activation_error2">Fel inträffade. Försök att aktivera %1$s med kommandon nedan. \n \n%2$s \n\n%3$s</string>
     <string name="about_donate">Donera</string>
     <string name="about_web_site">Hemsida</string>
     <string name="kbd_activation_error">Kan inte öppna system-kbd-inställningar. \n Vänta till webbplatsen med manuella instruktioner …</string>

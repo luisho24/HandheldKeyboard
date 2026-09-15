@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingLeanbackLauncher,ImpliedTouchscreenHardware,MissingLeanbackSupport">
     <application>
+        <activity
+            android:name="com.liskovsoft.leankeyboard.activity.settings.HandheldSettingsActivity"
+            android:exported="false"
+            android:screenOrientation="unspecified"
+            android:theme="@style/Theme.Leanback" />
         <activity
             android:name="com.liskovsoft.leankeyboard.activity.settings.HandheldOnboardingActivity"
             android:exported="false"

@@ -67,6 +67,27 @@ public class KeyboardKeyNavigatorTest {
         assertMove("r", KeyboardKeyNavigator.Direction.UP_LEFT, "3");
     }
 
+    @Test
+    public void quickSettingsDeckRoutesAcrossEachSettingsCard() {
+        labels.clear();
+        keys.clear();
+        addKey("type", 0, 0, 90, 70);
+        addKey("themes", 100, 0, 90, 70);
+        addKey("layout", 200, 0, 90, 70);
+        addKey("sound", 300, 0, 90, 70);
+        addKey("more", 0, 80, 90, 70);
+        addKey("about", 100, 80, 90, 70);
+        addKey("setup", 200, 80, 90, 70);
+        addKey("settings", 300, 80, 90, 70);
+
+        assertMove("themes", KeyboardKeyNavigator.Direction.LEFT, "type");
+        assertMove("layout", KeyboardKeyNavigator.Direction.RIGHT, "sound");
+        assertMove("sound", KeyboardKeyNavigator.Direction.DOWN, "settings");
+        assertMove("more", KeyboardKeyNavigator.Direction.RIGHT, "about");
+        assertMove("about", KeyboardKeyNavigator.Direction.UP, "themes");
+        assertMove("setup", KeyboardKeyNavigator.Direction.UP, "layout");
+    }
+
     private void assertMove(String source, KeyboardKeyNavigator.Direction direction, String target) {
         assertEquals(target, labels.get(move(source, direction)));
     }

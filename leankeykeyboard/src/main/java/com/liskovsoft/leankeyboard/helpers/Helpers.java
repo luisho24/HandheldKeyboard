@@ -56,7 +56,7 @@ public class Helpers {
     }
 
     public static boolean matchSubstrNoCase(String host, String mask) {
-        return matchSubstr(host.toLowerCase(), mask.toLowerCase());
+        return matchSubstr(host.toLowerCase(Locale.ROOT), mask.toLowerCase(Locale.ROOT));
     }
 
     public static InputStream getAsset(Context ctx, String fileName) {

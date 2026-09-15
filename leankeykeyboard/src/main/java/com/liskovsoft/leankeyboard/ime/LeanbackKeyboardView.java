@@ -7,11 +7,14 @@ import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -25,9 +28,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import androidx.core.content.ContextCompat;
 import com.liskovsoft.leankeykeyboard.R;
+import com.liskovsoft.leankeyboard.utils.TextDrawable;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class LeanbackKeyboardView extends FrameLayout {
     private static final String TAG = "LbKbView";
@@ -46,6 +51,26 @@ public class LeanbackKeyboardView extends FrameLayout {
     public static final int KEYCODE_DISMISS_MINI_KEYBOARD = -8;
     public static final int KEYCODE_LEFT = -3;
     public static final int KEYCODE_RIGHT = -4;
+    public static final int KEYCODE_UP = -14;
+    public static final int KEYCODE_DOWN = -15;
+    public static final int KEYCODE_EDIT_TOGGLE = -16;
+    public static final int KEYCODE_HOME = -17;
+    public static final int KEYCODE_END = -18;
+    public static final int KEYCODE_SELECT_LEFT = -19;
+    public static final int KEYCODE_SELECT_RIGHT = -20;
+    public static final int KEYCODE_SELECT_UP = -21;
+    public static final int KEYCODE_SELECT_DOWN = -22;
+    public static final int KEYCODE_UNDO = -23;
+    public static final int KEYCODE_REDO = -24;
+    public static final int KEYCODE_TAB = -25;
+    public static final int KEYCODE_ESCAPE = -26;
+    public static final int KEYCODE_SELECT_ALL = -27;
+    public static final int KEYCODE_QUICK_THEME = -28;
+    public static final int KEYCODE_QUICK_LAYOUT = -29;
+    public static final int KEYCODE_QUICK_SOUND = -30;
+    public static final int KEYCODE_QUICK_MORE = -31;
+    public static final int KEYCODE_QUICK_ABOUT = -32;
+    public static final int KEYCODE_QUICK_SETUP = -33;
     public static final int KEYCODE_SHIFT = -1;
     public static final int KEYCODE_SYM_TOGGLE = -2;
     public static final int KEYCODE_VOICE = -7;
@@ -72,6 +97,9 @@ public class LeanbackKeyboardView extends FrameLayout {
     private ImageView[] mKeyImageViews;
     private int mKeyTextColor;
     private int mKeyBackgroundColor = 0x403A4148;
+    private float mKeyCornerRadiusFraction = 0.22f;
+    private boolean mKeyGlassEffect;
+    private boolean mKeyLiquidEffect;
     private Keyboard mKeyboard;
     private KeyHolder[] mKeys;
     private boolean mMiniKeyboardOnScreen;
@@ -84,11 +112,23 @@ public class LeanbackKeyboardView extends FrameLayout {
     private final Paint mHintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mHintBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint mKeyBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mKeyGlassHighlightPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint mKeyGlassStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     protected int mKeyTextSize;
     protected int mModeChangeTextSize;
     protected float mKeyboardScaleFactor = 1.0f;
     private Drawable mCustomCapsLockDrawable;
     private int mControllerFamily = -1;
+
+    private static final class ControllerHint {
+        final int iconResId;
+        final String fallbackLabel;
+
+        ControllerHint(int iconResId, String fallbackLabel) {
+            this.iconResId = iconResId;
+            this.fallbackLabel = fallbackLabel;
+        }
+    }
 
     private static class KeyConverter {
         private static final int LOWER_CASE = 0;
@@ -120,10 +160,10 @@ public class LeanbackKeyboardView extends FrameLayout {
 
             switch (charCase) {
                 case LOWER_CASE:
-                    result = labels != null ? labels[0] : label.toString().toLowerCase();
+                    result = labels != null ? labels[0] : label.toString().toLowerCase(Locale.ROOT);
                     break;
                 case UPPER_CASE:
-                    result = labels != null ? labels[1] : label.toString().toUpperCase();
+                    result = labels != null ? labels[1] : label.toString().toUpperCase(Locale.ROOT);
                     break;
             }
 
@@ -209,10 +249,31 @@ public class LeanbackKeyboardView extends FrameLayout {
         float keyInset = Math.max(1.0f, Math.min(key.width, key.height) * 0.045f);
         RectF keyShape = new RectF(keyInset, keyInset, key.width - keyInset, key.height - keyInset);
         mKeyBackgroundPaint.setColor(mKeyBackgroundColor);
-        float keyRadius = Math.min(key.width, key.height) * 0.22f;
+        float keyRadius = Math.min(key.width, key.height) * mKeyCornerRadiusFraction;
         canvas.drawRoundRect(keyShape, keyRadius, keyRadius, mKeyBackgroundPaint);
+        if (mKeyGlassEffect) {
+            // Android exposes backdrop blur to an IME at window scope only. A
+            // key-bounded treatment avoids blurring the full editor behind it.
+            float glossHeight = keyShape.height() * (mKeyLiquidEffect ? 0.62f : 0.48f);
+            int topAlpha = mKeyLiquidEffect ? 44 : 30;
+            mKeyGlassHighlightPaint.setStyle(Paint.Style.FILL);
+            mKeyGlassHighlightPaint.setShader(new LinearGradient(
+                    0f, keyShape.top, 0f, keyShape.top + glossHeight,
+                    new int[]{Color.argb(topAlpha, 255, 255, 255), Color.argb(0, 255, 255, 255)},
+                    null, Shader.TileMode.CLAMP));
+            canvas.drawRoundRect(keyShape, keyRadius, keyRadius, mKeyGlassHighlightPaint);
+            mKeyGlassHighlightPaint.setShader(null);
 
-        if (key.icon != null) {
+            mKeyGlassStrokePaint.setStyle(Paint.Style.STROKE);
+            mKeyGlassStrokePaint.setStrokeWidth(Math.max(1f, Math.min(key.width, key.height) * 0.014f));
+            mKeyGlassStrokePaint.setColor(Color.argb(mKeyLiquidEffect ? 88 : 62, 255, 255, 255));
+            canvas.drawRoundRect(keyShape, keyRadius, keyRadius, mKeyGlassStrokePaint);
+        }
+
+        if (key.codes != null && key.codes.length > 0 && key.codes[0] == ASCII_SPACE
+                && isHandheldKeyboard()) {
+            drawHandheldSpacebar(canvas, key, keyShape, paint, label);
+        } else if (key.icon != null) {
             if (key.codes[0] == NOT_A_KEY) {
                 switch (mShiftState) {
                     case SHIFT_OFF:
@@ -241,6 +302,25 @@ public class LeanbackKeyboardView extends FrameLayout {
                 iconHeight = newSize;
             }
 
+            // Most command icons are authored on a square canvas. The
+            // handheld layout can make their keys rectangular after fitting
+            // the keyboard to the display. Stretching that 72x72 artwork to
+            // fill the key made the globe and settings glyphs look wide.
+            // Keep their original aspect ratio and size them from the key's
+            // shortest side instead.
+            int intrinsicWidth = key.icon.getIntrinsicWidth();
+            int intrinsicHeight = key.icon.getIntrinsicHeight();
+            boolean squareCommandIcon = key.codes[0] != ASCII_SPACE
+                    && intrinsicWidth > 0
+                    && intrinsicHeight > 0
+                    && Math.abs(intrinsicWidth - intrinsicHeight) <= 1;
+            if (squareCommandIcon) {
+                int newSize = Math.round(Math.min(key.width, key.height)
+                        * mSquareIconScaleFactor);
+                iconWidth = newSize;
+                iconHeight = newSize;
+            }
+
             if (key.codes[0] == ASCII_SPACE && mKeyboardScaleFactor > 1.0f) {
                 // space fix for large interface
                 float gap = getResources().getDimension(R.dimen.keyboard_horizontal_gap);
@@ -253,13 +333,30 @@ public class LeanbackKeyboardView extends FrameLayout {
 
             canvas.translate((float) dx, (float) dy);
             key.icon.setBounds(0, 0, iconWidth, iconHeight);
-            boolean isSettingsKey = key.codes != null && key.codes.length > 0 && key.codes[0] == KEYCODE_SETTINGS;
-            if (isSettingsKey) {
-                key.icon.setColorFilter(mKeyTextColor, PorterDuff.Mode.SRC_IN);
+            if (key.icon instanceof TextDrawable) {
+                // The localised Space label is drawn by TextDrawable rather
+                // than the icon bitmap, so a Drawable color filter alone does
+                // not change its text color.
+                ((TextDrawable) key.icon).setTextColor(mKeyTextColor);
             }
+            // Function glyphs used to be authored in white. Tint them with the
+            // active label color so Space, Shift, language and cursor controls
+            // remain readable on a light palette as well as a dark one.
+            key.icon.mutate().setColorFilter(mKeyTextColor, PorterDuff.Mode.SRC_IN);
             key.icon.draw(canvas);
-            if (isSettingsKey) {
-                key.icon.setColorFilter(null);
+            key.icon.setColorFilter(null);
+            if (key.codes[0] == ASCII_SPACE && key.icon instanceof TextDrawable) {
+                // Draw the language name ourselves after the legacy space-bar
+                // artwork. StaticLayout keeps its own white paint on some
+                // Android versions, so this guarantees the light variant has
+                // a readable language label.
+                TextDrawable spaceDrawable = (TextDrawable) key.icon;
+                paint.setColor(mKeyTextColor);
+                paint.setTextAlign(Paint.Align.CENTER);
+                paint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+                paint.setTextSize(Math.max(12f, iconHeight * 0.28f));
+                float baseline = iconHeight / 2f - (paint.ascent() + paint.descent()) / 2f;
+                canvas.drawText(spaceDrawable.getText().toString(), iconWidth / 2f, baseline, paint);
             }
             canvas.translate((float) (-dx), (float) (-dy));
         } else if (label != null) {
@@ -309,54 +406,153 @@ public class LeanbackKeyboardView extends FrameLayout {
         return image;
     }
 
+    /** Draws a calm language control instead of stretching the legacy space artwork. */
+    private void drawHandheldSpacebar(Canvas canvas, Key key, RectF keyShape, Paint paint,
+                                      String fallbackLabel) {
+        String language = fallbackLabel;
+        if (key.icon instanceof TextDrawable) {
+            CharSequence localized = ((TextDrawable) key.icon).getText();
+            if (localized != null && localized.length() > 0) {
+                language = localized.toString();
+            }
+        }
+        if (language == null || language.length() == 0) {
+            language = "Space";
+        }
+
+        float centerX = keyShape.centerX();
+        float labelSize = Math.max(14f, keyShape.height() * 0.27f);
+        paint.setColor(mKeyTextColor);
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTypeface(Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD));
+        paint.setTextSize(labelSize);
+        float labelBaseline = keyShape.centerY() - keyShape.height() * 0.10f
+                - (paint.ascent() + paint.descent()) / 2f;
+        canvas.drawText(language, centerX, labelBaseline, paint);
+
+        // A slim centred rail expresses the wide key's purpose without the
+        // old bright inset bar that competed with the language name.
+        float maxRailWidth = 140f * getResources().getDisplayMetrics().density;
+        float railWidth = Math.min(keyShape.width() * 0.34f, maxRailWidth);
+        float railHeight = Math.max(2f, keyShape.height() * 0.045f);
+        float railY = keyShape.centerY() + keyShape.height() * 0.24f;
+        mKeyGlassHighlightPaint.setShader(null);
+        mKeyGlassHighlightPaint.setStyle(Paint.Style.FILL);
+        mKeyGlassHighlightPaint.setColor(Color.argb(92, Color.red(mKeyTextColor),
+                Color.green(mKeyTextColor), Color.blue(mKeyTextColor)));
+        RectF rail = new RectF(centerX - railWidth / 2f, railY - railHeight / 2f,
+                centerX + railWidth / 2f, railY + railHeight / 2f);
+        canvas.drawRoundRect(rail, railHeight, railHeight, mKeyGlassHighlightPaint);
+
+        float notchWidth = Math.max(12f, railHeight * 5f);
+        mKeyGlassHighlightPaint.setColor(mKeyTextColor);
+        RectF notch = new RectF(centerX - notchWidth / 2f, railY - railHeight / 2f,
+                centerX + notchWidth / 2f, railY + railHeight / 2f);
+        canvas.drawRoundRect(notch, railHeight, railHeight, mKeyGlassHighlightPaint);
+    }
+
+    private boolean isHandheldKeyboard() {
+        return "com.handheldkeyboard.ime".equals(getContext().getPackageName());
+    }
+
     private void drawControllerHint(Canvas canvas, Key key) {
         if (key.codes == null || key.codes.length == 0) {
             return;
         }
 
-        String[] hints = getControllerHints(key.codes[0]);
+        ControllerHint[] hints = getControllerHints(key.codes[0]);
         if (hints == null || hints.length == 0) {
             return;
         }
 
         float shortSide = Math.min(key.width, key.height);
-        float margin = Math.max(2f, shortSide * 0.055f);
-        float textSize = Math.max(9f, shortSide * (hints.length > 1 ? 0.15f : 0.18f));
+        // These are instructions, not decoration. The original TV-sized
+        // badges became unreadable after the handheld layout condensed the
+        // key rows. Give them a usable minimum size on 1080p handhelds while
+        // keeping a little separation from the main key glyph.
+        float margin = Math.max(3f, shortSide * 0.06f);
+        float iconHeight = Math.max(20f, shortSide * (hints.length > 1 ? 0.29f : 0.38f));
+        float iconGap = Math.max(3f, iconHeight * 0.12f);
+        float textSize = Math.max(13f, shortSide * (hints.length > 1 ? 0.22f : 0.26f));
         mHintPaint.setTextSize(textSize);
         mHintPaint.setTextAlign(Paint.Align.CENTER);
         mHintPaint.setColor(0xFFFFFFFF);
         mHintBackgroundPaint.setColor(0xCC1B2A3B);
 
         for (int i = 0; i < hints.length; i++) {
-            String hint = hints[i];
-            float horizontalPadding = textSize * 0.34f;
-            float verticalPadding = textSize * 0.16f;
-            float badgeWidth = mHintPaint.measureText(hint) + horizontalPadding * 2;
-            float badgeHeight = textSize + verticalPadding * 2;
+            ControllerHint hint = hints[i];
+            Drawable icon = hint.iconResId != 0 ? ContextCompat.getDrawable(getContext(), hint.iconResId) : null;
+            float badgeHeight = icon != null ? iconHeight : textSize + textSize * 0.32f;
+            float badgeWidth;
+            if (icon != null && icon.getIntrinsicWidth() > 0 && icon.getIntrinsicHeight() > 0) {
+                float aspect = (float) icon.getIntrinsicWidth() / (float) icon.getIntrinsicHeight();
+                badgeWidth = badgeHeight * aspect;
+                // Keep wide shoulder-button glyphs inside compact keycaps.
+                float maxWidth = Math.max(badgeHeight, key.width * 0.48f);
+                if (badgeWidth > maxWidth) {
+                    badgeWidth = maxWidth;
+                    badgeHeight = badgeWidth / aspect;
+                }
+            } else {
+                String label = hint.fallbackLabel == null ? "" : hint.fallbackLabel;
+                float horizontalPadding = textSize * 0.34f;
+                badgeWidth = mHintPaint.measureText(label) + horizontalPadding * 2;
+            }
             float left = key.width - badgeWidth - margin;
-            float top = margin + i * (badgeHeight + 2f);
+            float top = margin + i * (badgeHeight + iconGap);
             RectF badge = new RectF(left, top, left + badgeWidth, top + badgeHeight);
 
-            canvas.drawRoundRect(badge, badgeHeight * 0.35f, badgeHeight * 0.35f, mHintBackgroundPaint);
-            canvas.drawText(hint, left + badgeWidth / 2, top + badgeHeight / 2 - (mHintPaint.ascent() + mHintPaint.descent()) / 2, mHintPaint);
+            if (icon != null) {
+                icon.setBounds(Math.round(left), Math.round(top), Math.round(left + badgeWidth), Math.round(top + badgeHeight));
+                icon.draw(canvas);
+            } else {
+                canvas.drawRoundRect(badge, badgeHeight * 0.35f, badgeHeight * 0.35f, mHintBackgroundPaint);
+                canvas.drawText(hint.fallbackLabel, left + badgeWidth / 2,
+                        top + badgeHeight / 2 - (mHintPaint.ascent() + mHintPaint.descent()) / 2, mHintPaint);
+            }
         }
     }
 
-    private String[] getControllerHints(int keyCode) {
+    private ControllerHint[] getControllerHints(int keyCode) {
         int family = getControllerFamily();
         switch (keyCode) {
             case KEYCODE_DELETE:
-                return new String[] {family == 2 ? "□" : family == 3 ? "Y" : "X"};
+                return new ControllerHint[] {family == 2
+                        ? new ControllerHint(R.drawable.controller_ps_square, "□")
+                        : family == 3
+                        ? new ControllerHint(R.drawable.controller_switch_y, "Y")
+                        : new ControllerHint(R.drawable.controller_xb_x, "X")};
             case ASCII_SPACE:
-                return new String[] {family == 2 ? "△" : family == 3 ? "X" : "Y"};
+                return new ControllerHint[] {family == 2
+                        ? new ControllerHint(R.drawable.controller_ps_triangle, "△")
+                        : family == 3
+                        ? new ControllerHint(R.drawable.controller_switch_x, "X")
+                        : new ControllerHint(R.drawable.controller_xb_y, "Y")};
             case KEYCODE_SHIFT:
-                return new String[] {family == 2 ? "L1" : family == 3 ? "L" : "LB", family == 2 ? "R3" : "RS"};
+                return new ControllerHint[] {
+                        family == 2
+                                ? new ControllerHint(R.drawable.controller_ps_l1, "L1")
+                                : family == 3
+                                ? new ControllerHint(R.drawable.controller_switch_l, "L")
+                                : new ControllerHint(R.drawable.controller_xb_lb, "LB"),
+                        new ControllerHint(R.drawable.controller_generic_r3, family == 2 ? "R3" : "RS")
+                };
             case KEYCODE_SYM_TOGGLE:
-                return new String[] {family == 2 ? "R1" : family == 3 ? "R" : "RB"};
+                return new ControllerHint[] {family == 2
+                        ? new ControllerHint(R.drawable.controller_ps_r1, "R1")
+                        : family == 3
+                        ? new ControllerHint(R.drawable.controller_switch_r, "R")
+                        : new ControllerHint(R.drawable.controller_xb_rb, "RB")};
             case KEYCODE_CAPS_LOCK:
-                return new String[] {family == 2 ? "R3" : "RS"};
+                return new ControllerHint[] {
+                        new ControllerHint(R.drawable.controller_generic_r3, family == 2 ? "R3" : "RS")
+                };
             case KEYCODE_LANG_TOGGLE:
-                return new String[] {family == 2 ? "SHARE" : family == 3 ? "−" : "VIEW"};
+                return new ControllerHint[] {family == 2
+                        ? new ControllerHint(R.drawable.controller_ps_super, "SHARE")
+                        : family == 3
+                        ? new ControllerHint(R.drawable.controller_switch_minus, "−")
+                        : new ControllerHint(R.drawable.controller_xb_select, "VIEW")};
             default:
                 return null;
         }
@@ -402,11 +598,20 @@ public class LeanbackKeyboardView extends FrameLayout {
             int totalImages = images.length;
 
             for (int i = 0; i < totalImages; ++i) {
+                images[i].animate().cancel();
+                resetKeyTransform(images[i]);
                 removeView(images[i]);
             }
 
             mKeyImageViews = null;
         }
+
+        // Image views are recreated when a theme, case, or layout changes.
+        // Never retain a focus animation target from the previous set: it may
+        // have been removed from this FrameLayout already.
+        mCurrentFocusView = null;
+        mFocusIndex = -1;
+        mFocusClicked = false;
 
         int totalKeys = keys.length;
         for (int i = 0; i < totalKeys; ++i) {
@@ -643,32 +848,19 @@ public class LeanbackKeyboardView extends FrameLayout {
                 }
 
                 if (mCurrentFocusView != null) {
-                    mCurrentFocusView.animate()
-                                     .scaleX(scale)
-                                     .scaleY(scale)
-                                     .setInterpolator(LeanbackKeyboardContainer.sMovementInterpolator)
-                                     .setStartDelay(mUnfocusStartDelay);
-
-                    mCurrentFocusView.animate()
-                                     .setDuration(mClickAnimDur)
-                                     .setInterpolator(LeanbackKeyboardContainer.sMovementInterpolator)
-                                     .setStartDelay(mUnfocusStartDelay);
+                    resetKeyTransform(mCurrentFocusView);
                 }
 
                 if (indexFull != -1) {
-                    if (clicked) {
-                        scale = mClickedScale;
-                    } else if (showFocusScale) {
-                        scale = mFocusedScale;
-                    }
-
                     mCurrentFocusView = mKeyImageViews[indexFull];
-                    mCurrentFocusView.animate()
-                                     .scaleX(scale)
-                                     .scaleY(scale)
-                                     .setInterpolator(LeanbackKeyboardContainer.sMovementInterpolator)
-                                     .setDuration(mClickAnimDur)
-                                     .start();
+                    if (clicked) {
+                        playKeyPressAnimation(mCurrentFocusView);
+                    } else {
+                        // The selector communicates focus. Scaling the bitmap
+                        // itself made fast controller navigation leave enlarged
+                        // key artwork over neighbouring rows on some devices.
+                        resetKeyTransform(mCurrentFocusView);
+                    }
                 }
 
                 mFocusIndex = indexFull;
@@ -735,8 +927,46 @@ public class LeanbackKeyboardView extends FrameLayout {
         invalidateAllKeys();
     }
 
+    /** A bounded press pulse that never alters the key's position or dimensions. */
+    private void playKeyPressAnimation(View keyView) {
+        keyView.animate().cancel();
+        keyView.setScaleX(1f);
+        keyView.setScaleY(1f);
+        keyView.setAlpha(0.72f);
+        keyView.animate()
+                .alpha(1f)
+                .setInterpolator(LeanbackKeyboardContainer.sMovementInterpolator)
+                .setDuration(mClickAnimDur)
+                .start();
+    }
+
+    private void resetKeyTransform(View keyView) {
+        keyView.animate().cancel();
+        keyView.setScaleX(1f);
+        keyView.setScaleY(1f);
+        keyView.setAlpha(1f);
+    }
+
     public void setKeyBackgroundColor(int color) {
         mKeyBackgroundColor = color;
         invalidateAllKeys();
+    }
+
+    /** Updates the keycap shape for a theme (Xbox uses flatter rectangular caps). */
+    public void setKeyCornerRadiusFraction(float fraction) {
+        mKeyCornerRadiusFraction = Math.max(0f, Math.min(0.5f, fraction));
+        invalidateAllKeys();
+    }
+
+    /** Adds a glass rim within each key without applying a full IME-window blur. */
+    public void setKeyGlassEffect(boolean enabled, boolean liquid) {
+        if (mKeyGlassEffect == enabled && mKeyLiquidEffect == liquid) {
+            return;
+        }
+        mKeyGlassEffect = enabled;
+        mKeyLiquidEffect = enabled && liquid;
+        if (mKeys != null) {
+            invalidateAllKeys();
+        }
     }
 }

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Retroid Pocket 6 Ember Circuit: warm OLED black with magenta controller energy. -->
+    <color name="keyboard_background_retroidember">#ff160d0a</color>
+    <color name="candidate_background_retroidember">#ff25130d</color>
+    <color name="candidate_font_color_retroidember">#ffffb15a</color>
+    <color name="enter_key_font_color_retroidember">#ffffb15a</color>
+    <color name="key_text_default_retroidember">#fffff4e9</color>
+    <color name="key_background_retroidember">#ff3b241a</color>
+    <color name="key_focus_color_retroidember">#ffff5e9b</color>
+</resources>

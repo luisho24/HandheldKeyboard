@@ -35,7 +35,7 @@
     <string name="kb_settings_desc">تنظیمات صفحه کلید</string>
     <string name="activate_keyboard">صفحه کلید را فعال کنید</string>
     <string name="change_layout">طرح بندی را تغییر دهید</string>
-    <string name="enable_kb_in_system_prefs">شما باید٪ s را در تنظیمات برگزیده سیستم فعال کنید</string>
+    <string name="enable_kb_in_system_prefs">شما باید%1$s را در تنظیمات برگزیده سیستم فعال کنید</string>
     <string name="about">در باره</string>
     <string name="about_desc">درباره برنامه</string>
     <string name="keep_on_screen_desc">در حالی که صفحه کلید فیزیکی فعال است ، آن را روی صفحه نگه دارید</string>
@@ -45,7 +45,7 @@
     <string name="keyboardview_keycode_clipboard">کلیپ بورد</string>
     <string name="increase_kbd_size">صفحه کلید را بزرگ کنید</string>
     <string name="increase_kbd_size_desc">اندازه صفحه کلید را افزایش دهید</string>
-    <string name="kbd_activation_error2">خطا رخ داده است. سعی کنید٪ s را با دستورات زیر فعال کنید. \n\n٪ s \n\n٪ s</string>
+    <string name="kbd_activation_error2">خطا رخ داده است. سعی کنید%1$s را با دستورات زیر فعال کنید. \n\n%2$s \n\n%3$s</string>
     <string name="about_donate">اهدا کنید</string>
     <string name="about_web_site">سایت اینترنتی</string>
     <string name="kbd_activation_error">نمی توانید تنظیمات سیستم kbd را باز کنید. \nبا هدایت دستی به سایت هدایت شوید …</string>

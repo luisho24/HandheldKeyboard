@@ -17,8 +17,8 @@
     <string name="theme_surface_translucent">Superficie translúcida</string>
     <string name="theme_surface_translucent_desc">Mezclar las superficies con el contenido que está detrás del teclado.</string>
     <string name="theme_surface_glass">Superficie de vidrio esmerilado</string>
-    <string name="theme_surface_glass_desc">Aplicar desenfoque en Android 12 o posterior; las versiones anteriores usan translucidez.</string>
+    <string name="theme_surface_glass_desc">Una superficie esmerilada limitada al teclado, con tinte y borde de vidrio. Una ventana IME no puede desenfocar de forma segura otra app detrás de esta área.</string>
     <string name="theme_surface_liquid">Vidrio líquido</string>
-    <string name="theme_surface_liquid_desc">Desenfoque limitado al teclado con un borde luminoso de vidrio refractado.</string>
+    <string name="theme_surface_liquid_desc">Un borde luminoso de vidrio refractado, limitado al teclado, con translucidez en capas.</string>
     <string name="theme_surface_opacity">Opacidad de la superficie</string>
 </resources>

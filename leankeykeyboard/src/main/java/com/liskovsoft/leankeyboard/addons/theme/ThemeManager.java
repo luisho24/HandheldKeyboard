@@ -10,6 +10,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Path;
+import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
@@ -73,6 +74,7 @@ public class ThemeManager {
                     colorOrDefault(R.color.candidate_background, R.color.keyboard_background),
                     colorOrDefault(R.color.enter_key_font_color, R.color.key_text_default),
                     text, blend(background, text, 0.14f), false);
+            applySelectorColor(colorOrDefault(R.color.candidate_font_color, R.color.key_text_default));
             applyBackgroundImage(null);
             applyShiftDrawable(-1);
             return;
@@ -83,16 +85,18 @@ public class ThemeManager {
             int defaultText = colorOrDefault(R.color.key_text_default, R.color.key_text_default);
             int background = themeColor(themeId, "keyboard_background_", defaultBackground);
             int text = themeColor(themeId, "key_text_default_", defaultText);
+            int accent = themeColor(themeId, "candidate_font_color_", R.color.candidate_font_color);
             applyKeyboardColors(background,
                     themeColor(themeId, "candidate_background_", R.color.candidate_background),
                     themeColor(themeId, "enter_key_font_color_", R.color.enter_key_font_color),
-                    text, blend(background, text, 0.14f), false);
+                    text, themeColorValue(themeId, "key_background_", blend(background, text, 0.14f)), false);
+            applySelectorColor(themeColorValue(themeId, "key_focus_color_", accent));
 
             int shiftLockOnResId = mContext.getResources().getIdentifier(
                     "ic_ime_shift_lock_on_" + themeId.toLowerCase(java.util.Locale.ROOT),
                     "drawable", mContext.getPackageName());
             applyShiftDrawable(shiftLockOnResId);
-            applyBackgroundImage(null);
+            applyBackgroundImage(loadBuiltInThemeBackground(themeId));
         });
 
         if (!found) {
@@ -102,6 +106,7 @@ public class ThemeManager {
                     colorOrDefault(R.color.candidate_background, R.color.keyboard_background),
                     colorOrDefault(R.color.enter_key_font_color, R.color.key_text_default),
                     text, blend(background, text, 0.14f), false);
+            applySelectorColor(colorOrDefault(R.color.candidate_font_color, R.color.key_text_default));
             applyBackgroundImage(null);
             applyShiftDrawable(-1);
         }
@@ -136,18 +141,14 @@ public class ThemeManager {
         int accent = resolveCustomAccent(darkVariant);
 
         applyKeyboardColors(background, candidateBackground, accent, text, keyBackground, hasImage);
+        applySelectorColor(accent);
         applyBackgroundImage(image);
         applyShiftDrawable(-1);
     }
 
     private void applyBackgroundImage(Bitmap image) {
         if (image == null) {
-            if (mLoadedImage != null && !mLoadedImage.isRecycled()) {
-                mLoadedImage.recycle();
-            }
-            mLoadedImage = null;
-            mLoadedImagePath = null;
-            mLoadedImageLastModified = 0;
+            clearLoadedCustomImage();
             return;
         }
 
@@ -167,16 +168,37 @@ public class ThemeManager {
         }
     }
 
+    /** Loads the packaged artwork for a built-in theme, when it has one. */
+    private Bitmap loadBuiltInThemeBackground(String themeId) {
+        clearLoadedCustomImage();
+        int resourceId = mContext.getResources().getIdentifier(
+                "theme_background_" + themeId.toLowerCase(java.util.Locale.ROOT),
+                "drawable", mContext.getPackageName());
+        return resourceId == 0 ? null : BitmapFactory.decodeResource(mContext.getResources(), resourceId);
+    }
+
+    private void clearLoadedCustomImage() {
+        if (mLoadedImage != null && !mLoadedImage.isRecycled()) {
+            mLoadedImage.recycle();
+        }
+        mLoadedImage = null;
+        mLoadedImagePath = null;
+        mLoadedImageLastModified = 0;
+    }
+
     private void applyKeyboardColors(int keyboardBackground, int candidateBackground,
                                     int enterFontColor, int keyTextColor,
                                     int keyBackgroundColor, boolean hasImage) {
+        int readableKeyText = ensureReadableTextColor(keyTextColor, keyBackgroundColor);
+        int readableEnterText = ensureReadableTextColor(enterFontColor, keyBackgroundColor);
         RelativeLayout rootLayout = mRootView.findViewById(R.id.root_ime);
         boolean floating = KeyboardLayoutPreferences.isFloatingKeyboard(mContext);
         applyRootPadding(floating);
         if (rootLayout != null) {
             int surfaceColor = withAlpha(keyboardBackground, getSurfaceAlpha());
+            boolean glass = LeanKeyPreferences.SURFACE_GLASS.equals(mPrefs.getThemeSurfaceMode());
             boolean liquid = LeanKeyPreferences.SURFACE_LIQUID.equals(mPrefs.getThemeSurfaceMode());
-            Drawable surface = floating || liquid
+            Drawable surface = floating || glass || liquid
                     ? createSurfaceDrawable(surfaceColor, floating ? 22 : 0)
                     : new ColorDrawable(surfaceColor);
             rootLayout.setBackgroundDrawable(withFloatingInsets(surface, floating));
@@ -185,28 +207,71 @@ public class ThemeManager {
         View candidateLayout = mRootView.findViewById(R.id.candidate_background);
         if (candidateLayout != null) {
             int candidateColor = withAlpha(candidateBackground, getSurfaceAlpha());
+            boolean glass = LeanKeyPreferences.SURFACE_GLASS.equals(mPrefs.getThemeSurfaceMode());
             boolean liquid = LeanKeyPreferences.SURFACE_LIQUID.equals(mPrefs.getThemeSurfaceMode());
-            candidateLayout.setBackgroundDrawable(floating || liquid
+            candidateLayout.setBackgroundDrawable(floating || glass || liquid
                     ? createSurfaceDrawable(candidateColor, floating ? 10 : 0)
                     : new ColorDrawable(candidateColor));
         }
 
-        Button enterButton = mRootView.findViewById(R.id.enter);
-        if (enterButton != null) {
-            enterButton.setTextColor(enterFontColor);
+        int[] actionIds = {R.id.enter, R.id.action_home, R.id.action_end, R.id.action_paste};
+        for (int actionId : actionIds) {
+            Button actionButton = mRootView.findViewById(actionId);
+            if (actionButton == null) {
+                continue;
+            }
+            actionButton.setTextColor(readableEnterText);
+            for (Drawable drawable : actionButton.getCompoundDrawables()) {
+                if (drawable != null) {
+                    drawable.mutate().setColorFilter(readableEnterText, PorterDuff.Mode.SRC_IN);
+                }
+            }
             if ("com.handheldkeyboard.ime".equals(mContext.getPackageName())) {
-                // The handheld editor action is part of the key row, so give it
-                // the same surface language as the other keys.
+                // The action rail is part of the handheld key grid, so each
+                // shortcut gets the same readable surface as the other keys.
                 int actionSurface = withAlpha(keyBackgroundColor, getSurfaceAlpha());
-                enterButton.setBackgroundDrawable(createSurfaceDrawable(actionSurface, 10));
+                actionButton.setBackgroundDrawable(createSurfaceDrawable(actionSurface, 10));
             }
         }
 
         LeanbackKeyboardView keyboardView = mRootView.findViewById(R.id.main_keyboard);
         if (keyboardView != null) {
             keyboardView.setKeyBackgroundColor(withAlpha(keyBackgroundColor, getSurfaceAlpha()));
-            keyboardView.setKeyTextColor(keyTextColor);
+            keyboardView.setKeyTextColor(readableKeyText);
+            keyboardView.setKeyCornerRadiusFraction(
+                    "Xbox".equalsIgnoreCase(mPrefs.getCurrentTheme()) ? 0.08f : 0.22f);
+            boolean liquid = LeanKeyPreferences.SURFACE_LIQUID.equals(mPrefs.getThemeSurfaceMode());
+            boolean glass = LeanKeyPreferences.SURFACE_GLASS.equals(mPrefs.getThemeSurfaceMode());
+            keyboardView.setKeyGlassEffect(glass || liquid, liquid);
         }
+    }
+
+    /** Chooses a legible neutral when a custom foreground is too close to its key surface. */
+    private static int ensureReadableTextColor(int foreground, int background) {
+        if (contrastRatio(foreground, background) >= 4.5d) {
+            return foreground;
+        }
+        return contrastRatio(Color.BLACK, background) >= contrastRatio(Color.WHITE, background)
+                ? Color.BLACK : Color.WHITE;
+    }
+
+    private static double contrastRatio(int first, int second) {
+        double firstLuminance = relativeLuminance(first);
+        double secondLuminance = relativeLuminance(second);
+        return (Math.max(firstLuminance, secondLuminance) + 0.05d) /
+                (Math.min(firstLuminance, secondLuminance) + 0.05d);
+    }
+
+    private static double relativeLuminance(int color) {
+        double red = linearColorChannel(Color.red(color));
+        double green = linearColorChannel(Color.green(color));
+        double blue = linearColorChannel(Color.blue(color));
+        return 0.2126d * red + 0.7152d * green + 0.0722d * blue;
+    }
+
+    private static double linearColorChannel(int component) {
+        double channel = component / 255d;
+        return channel <= 0.04045d ? channel / 12.92d : Math.pow((channel + 0.055d) / 1.055d, 2.4d);
     }
 
     /** Keeps the full-width IME window transparent while drawing the keyboard as a padded card. */
@@ -317,11 +382,11 @@ public class ThemeManager {
             boolean translucent = LeanKeyPreferences.SURFACE_TRANSLUCENT.equals(mPrefs.getThemeSurfaceMode());
             boolean floating = KeyboardLayoutPreferences.isFloatingKeyboard(mContext);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
                 // An IME window can cover the whole app even when its keyboard
                 // content is only at the bottom. Window blur therefore softens
                 // the host editor as well. Keep the window sharp and render the
                 // glass treatment on the keyboard's own background drawables.
-                window.clearFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
                 window.setBackgroundBlurRadius(0);
             }
             if (glass || translucent || floating) {
@@ -365,6 +430,34 @@ public class ThemeManager {
         }
     }
 
+    /** Returns the accent used for the focus ring and controller-friendly highlights. */
+    public int getFocusColor() {
+        String themeId = mPrefs.getCurrentTheme();
+        if (LeanKeyPreferences.THEME_CUSTOM.equals(themeId)) {
+            return resolveCustomAccent(mPrefs.isDarkAppearance());
+        }
+        if (LeanKeyPreferences.THEME_DEFAULT.equals(themeId)) {
+            return colorOrDefault(R.color.candidate_font_color, R.color.key_text_default);
+        }
+
+        final int[] result = {colorOrDefault(R.color.candidate_font_color, R.color.key_text_default)};
+        applyForTheme(id -> {
+            int accent = themeColor(id, "candidate_font_color_", R.color.candidate_font_color);
+            result[0] = themeColorValue(id, "key_focus_color_", accent);
+        });
+        return result[0];
+    }
+
+    private void applySelectorColor(int color) {
+        View selector = mRootView.findViewById(R.id.key_selector);
+        if (selector == null || selector.getBackground() == null) {
+            return;
+        }
+        Drawable tinted = selector.getBackground().mutate();
+        tinted.setColorFilter(color, PorterDuff.Mode.SRC_IN);
+        selector.setBackgroundDrawable(tinted);
+    }
+
     private void applyShiftDrawable(int resId) {
         LeanbackKeyboardView keyboardView = mRootView.findViewById(R.id.main_keyboard);
         if (keyboardView == null) {
@@ -379,6 +472,12 @@ public class ThemeManager {
         int resourceId = mContext.getResources().getIdentifier(
                 prefix + themeId.toLowerCase(java.util.Locale.ROOT), "color", mContext.getPackageName());
         return colorOrDefault(resourceId, defaultResId);
+    }
+
+    private int themeColorValue(String themeId, String prefix, int fallbackColor) {
+        int resourceId = mContext.getResources().getIdentifier(
+                prefix + themeId.toLowerCase(java.util.Locale.ROOT), "color", mContext.getPackageName());
+        return resourceId == 0 ? fallbackColor : ContextCompat.getColor(mContext, resourceId);
     }
 
     private int colorOrDefault(int resourceId, int defaultResId) {

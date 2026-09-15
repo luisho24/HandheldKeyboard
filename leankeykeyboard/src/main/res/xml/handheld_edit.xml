@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="@dimen/key_width"
+    android:keyHeight="@dimen/key_height"
+    android:horizontalGap="@dimen/keyboard_horizontal_gap"
+    android:verticalGap="@dimen/keyboard_vertical_gap">
+    <Row android:rowEdgeFlags="top">
+        <Key android:codes="-16" android:keyEdgeFlags="left" android:keyLabel="TYPE" />
+        <Key android:codes="-28" android:keyLabel="THEMES" />
+        <Key android:codes="-29" android:keyLabel="LAYOUT" />
+        <Key android:codes="-30" android:keyLabel="SOUND" android:keyEdgeFlags="right" />
+    </Row>
+    <Row android:rowEdgeFlags="bottom">
+        <Key android:codes="-31" android:keyEdgeFlags="left" android:keyLabel="MORE" />
+        <Key android:codes="-32" android:keyLabel="ABOUT" />
+        <Key android:codes="-33" android:keyLabel="SETUP" />
+        <Key android:codes="-11" android:keyLabel="SETTINGS" android:keyEdgeFlags="right" />
+    </Row>
+</Keyboard>

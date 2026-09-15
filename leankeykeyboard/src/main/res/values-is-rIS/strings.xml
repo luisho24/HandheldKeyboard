@@ -33,7 +33,7 @@
     <string name="kb_settings_desc">Stillingar lyklaborðs</string>
     <string name="activate_keyboard">Virkja lyklaborð</string>
     <string name="change_layout">Breyta skipulagi</string>
-    <string name="enable_kb_in_system_prefs">Þú verður að virkja %s í System Preferences</string>
+    <string name="enable_kb_in_system_prefs">Þú verður að virkja %1$s í System Preferences</string>
     <string name="about">Um það bil</string>
     <string name="about_desc">Um umsókn</string>
     <string name="keep_on_screen_desc">Geymdu það á skjánum þegar líkamlega lyklaborðið er virkt</string>
@@ -43,7 +43,7 @@
     <string name="keyboardview_keycode_clipboard">Klemmuspjald</string>
     <string name="increase_kbd_size">Stækka lyklaborðið</string>
     <string name="increase_kbd_size_desc">Auka stærð lyklaborðsins</string>
-    <string name="kbd_activation_error2">Villa kom upp. Reyndu að virkja %s með skipunum hér að neðan. \n \n%s \n\n%s</string>
+    <string name="kbd_activation_error2">Villa kom upp. Reyndu að virkja %1$s með skipunum hér að neðan. \n \n%2$s \n\n%3$s</string>
     <string name="about_donate">Gefa</string>
     <string name="about_web_site">Vefsíða</string>
     <string name="kbd_activation_error">Getur ekki opnað kbd stillingar kerfisins. \n Vísar á vefinn með handvirkum leiðbeiningum …</string>

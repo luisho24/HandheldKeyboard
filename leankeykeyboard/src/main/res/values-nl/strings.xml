@@ -36,7 +36,7 @@
     <string name="kb_settings_desc">Toetsenbordinstellingen</string>
     <string name="activate_keyboard">Toetsenbord inschakelen</string>
     <string name="change_layout">Indeling aanpassen</string>
-    <string name="enable_kb_in_system_prefs">Schakel \‘%s\’ in in de systeeminstellingen</string>
+    <string name="enable_kb_in_system_prefs">Schakel \‘%1$s\’ in in de systeeminstellingen</string>
     <string name="about">Over</string>
     <string name="about_desc">Over deze app</string>
     <string name="keep_on_screen_desc">Toon Leankey ook als er een fysiek toetsenbord is aangesloten</string>
@@ -46,7 +46,7 @@
     <string name="keyboardview_keycode_clipboard">Klembord</string>
     <string name="increase_kbd_size">Toetsenbord vergroten</string>
     <string name="increase_kbd_size_desc">Vergroot de toetsen</string>
-    <string name="kbd_activation_error2">Er is een fout opgetreden. Probeer \‘%s\’ in te schakelen middels onderstaande opdrachten. \n \n%s\n\n%s</string>
+    <string name="kbd_activation_error2">Er is een fout opgetreden. Probeer \‘%1$s\’ in te schakelen middels onderstaande opdrachten. \n \n%2$s\n\n%3$s</string>
     <string name="about_donate">Doneren</string>
     <string name="about_web_site">Website</string>
     <string name="kbd_activation_error">De systeemtoetsenbordinstellingen kunnen niet worden geopend. \nJe wordt doorgestuurd naar de instructiesite…</string>

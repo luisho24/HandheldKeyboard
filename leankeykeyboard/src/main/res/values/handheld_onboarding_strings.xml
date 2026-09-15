@@ -22,6 +22,12 @@
     <string name="onboarding_theme_xbox_desc">Deep green surfaces and vivid focus</string>
     <string name="onboarding_theme_switch">Nintendo Switch</string>
     <string name="onboarding_theme_switch_desc">A clean light palette with a coral accent</string>
+    <string name="onboarding_theme_retroid_aurora">Retroid Aurora</string>
+    <string name="onboarding_theme_retroid_aurora_desc">OLED navy with cyan and indigo light trails</string>
+    <string name="onboarding_theme_retroid_ember">Retroid Ember Circuit</string>
+    <string name="onboarding_theme_retroid_ember_desc">Warm circuit glow, amber controls, and magenta focus</string>
+    <string name="onboarding_theme_retroid_quartz">Retroid Quartz</string>
+    <string name="onboarding_theme_retroid_quartz_desc">A bright titanium surface for daylight play</string>
     <string name="onboarding_theme_night">Night</string>
     <string name="onboarding_theme_night_desc">Deep graphite with a blue accent</string>
     <string name="onboarding_theme_carbon">Carbon</string>
@@ -60,5 +66,6 @@
     <string name="onboarding_back">Back</string>
     <string name="onboarding_skip">Do this later</string>
     <string name="onboarding_theme_saved">Theme choice saved</string>
+    <string name="handheld_theme_done">Done</string>
     <string name="onboarding_surface_desc">Liquid glass keeps blur inside the keyboard and adds a refractive glass edge.</string>
 </resources>

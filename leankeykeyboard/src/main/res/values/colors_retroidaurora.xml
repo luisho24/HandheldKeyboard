@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Retroid Pocket 6 Aurora: OLED navy, cyan edge light and indigo energy. -->
+    <color name="keyboard_background_retroidaurora">#ff07131f</color>
+    <color name="candidate_background_retroidaurora">#ff0a2132</color>
+    <color name="candidate_font_color_retroidaurora">#ff62ddf0</color>
+    <color name="enter_key_font_color_retroidaurora">#ff9da9ff</color>
+    <color name="key_text_default_retroidaurora">#fff2faff</color>
+    <color name="key_background_retroidaurora">#ff173447</color>
+    <color name="key_focus_color_retroidaurora">#ff74f1e0</color>
+</resources>

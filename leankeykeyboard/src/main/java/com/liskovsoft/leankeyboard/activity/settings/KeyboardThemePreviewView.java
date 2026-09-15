@@ -17,9 +17,10 @@ import android.view.animation.AccelerateDecelerateInterpolator;
  * It deliberately draws its contents on a Canvas so it can scale to any card size.
  */
 public class KeyboardThemePreviewView extends View {
-    private static final String[] TOP_ROW = {"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"};
-    private static final String[] MIDDLE_ROW = {"a", "s", "d", "f", "g", "h", "j", "k", "l"};
-    private static final String[] BOTTOM_ROW = {"z", "x", "c", "v", "b", "n", "m"};
+    private static final String[] NUMBER_ROW = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "⌫"};
+    private static final String[] TOP_ROW = {"q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "@"};
+    private static final String[] MIDDLE_ROW = {"a", "s", "d", "f", "g", "h", "j", "k", "l", "ñ", "&"};
+    private static final String[] BOTTOM_ROW = {"z", "x", "c", "v", "b", "n", "m", ",", ".", "-", "?"};
 
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
@@ -31,6 +32,7 @@ public class KeyboardThemePreviewView extends View {
     private int textColor = 0xfff3f6fa;
     private int accentColor = 0xff57c6d8;
     private String themeLabel = "";
+    private boolean xboxStyle;
     private Bitmap backgroundImage;
     private float pulse = 0.5f;
     private ValueAnimator pulseAnimator;
@@ -56,6 +58,7 @@ public class KeyboardThemePreviewView extends View {
 
     public void setThemeLabel(String label) {
         themeLabel = label == null ? "" : label.trim();
+        xboxStyle = "xbox".equalsIgnoreCase(themeLabel);
         invalidate();
     }
 
@@ -118,79 +121,70 @@ public class KeyboardThemePreviewView extends View {
         canvas.drawRoundRect(rect, cardRadius, cardRadius, paint);
         paint.setStyle(Paint.Style.FILL);
 
+        // The preview uses the exact handheld structure: a numeric row, three
+        // character rows, a utility row and the action rail at the right.
+        // It intentionally does not draw a generic phone-keyboard suggestion bar.
         final float contentWidth = Math.max(0f, width - 2f * pad);
-        final float labelTop = pad + Math.min(height * 0.13f, 18f * density);
-        final float labelSize = clamp(height * 0.075f, 7f * scaledDensity, 11f * scaledDensity);
-        if (!themeLabel.isEmpty() && contentWidth > 0f) {
-            paint.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-            paint.setTextSize(labelSize);
-            paint.setTextAlign(Paint.Align.LEFT);
-            paint.setColor(withAlpha(textColor, 218));
-            drawFittedText(canvas, themeLabel, pad, labelTop, Math.max(0f, contentWidth * 0.72f));
-        }
-
-        final float suggestionTop = pad + Math.min(height * 0.16f, 21f * density);
-        final float suggestionHeight = clamp(height * 0.14f, 10f * density, 19f * density);
-        final float suggestionRadius = Math.min(suggestionHeight * 0.32f, 7f * density);
-        rect.set(pad, suggestionTop, width - pad, suggestionTop + suggestionHeight);
-        paint.setColor(withAlpha(keyColor, 192));
-        canvas.drawRoundRect(rect, suggestionRadius, suggestionRadius, paint);
-        drawSuggestion(canvas, rect, suggestionHeight);
-
-        final float bodyTop = suggestionTop + suggestionHeight + Math.max(2f * density, height * 0.035f);
+        final float bodyTop = pad;
         final float bodyBottom = height - pad;
         final float bodyHeight = Math.max(0f, bodyBottom - bodyTop);
-        if (bodyHeight <= 0f || contentWidth <= 0f) {
-            return;
+        if (bodyHeight <= 0f || contentWidth <= 0f) return;
+
+        float horizontalGap = clamp(contentWidth * 0.010f, 1f * density, 3f * density);
+        float rowGap = clamp(bodyHeight * 0.038f, 1f * density, 3f * density);
+        float railWidth = Math.max(contentWidth * 0.095f, 16f * density);
+        float mainWidth = contentWidth - railWidth - horizontalGap;
+        float keyWidth = (mainWidth - 10f * horizontalGap) / 11f;
+        if (keyWidth <= 0f) return;
+        float keyHeight = Math.max(1f, (bodyHeight - 4f * rowGap) / 5f);
+        float keyRadius = xboxStyle
+                ? Math.min(keyHeight * 0.08f, 4f * density)
+                : Math.min(keyHeight * 0.23f, 6f * density);
+        float textSize = clamp(keyHeight * 0.60f, 4.5f * scaledDensity, 12f * scaledDensity);
+
+        drawLettersRow(canvas, NUMBER_ROW, pad, bodyTop, keyWidth, keyHeight, horizontalGap,
+                keyRadius, textSize * 0.88f, false);
+        drawLettersRow(canvas, TOP_ROW, pad, bodyTop + keyHeight + rowGap, keyWidth, keyHeight,
+                horizontalGap, keyRadius, textSize, true);
+        drawLettersRow(canvas, MIDDLE_ROW, pad, bodyTop + 2f * (keyHeight + rowGap), keyWidth,
+                keyHeight, horizontalGap, keyRadius, textSize, false);
+        drawLettersRow(canvas, BOTTOM_ROW, pad, bodyTop + 3f * (keyHeight + rowGap), keyWidth,
+                keyHeight, horizontalGap, keyRadius, textSize, false);
+
+        drawUtilityRow(canvas, pad, bodyTop + 4f * (keyHeight + rowGap), mainWidth,
+                keyHeight, horizontalGap, keyRadius, textSize);
+        drawActionRail(canvas, pad + mainWidth + horizontalGap, bodyTop, railWidth, keyHeight,
+                rowGap, keyRadius, textSize);
+    }
+
+    private void drawUtilityRow(Canvas canvas, float left, float top, float width, float height,
+                                float gap, float radius, float textSize) {
+        float unit = (width - 7f * gap) / 11f;
+        float x = left;
+        String[] shortcuts = {"?123", "⇧", "◎", "⚙"};
+        for (String shortcut : shortcuts) {
+            drawSpecialKey(canvas, x, top, unit, height, radius, shortcut, textSize * 0.72f, false);
+            x += unit + gap;
         }
+        float spaceWidth = unit * 4f + 3f * gap;
+        drawSpaceKey(canvas, x, top, spaceWidth, height, radius, textSize * 0.64f);
+        x += spaceWidth + gap;
+        drawSpecialKey(canvas, x, top, unit, height, radius, "☺", textSize * 0.76f, false);
+        x += unit + gap;
+        drawSpecialKey(canvas, x, top, unit, height, radius, "edit", textSize * 0.48f, false);
+        x += unit + gap;
+        drawSpecialKey(canvas, x, top, unit, height, radius, "↕", textSize * 0.72f, false);
+    }
 
-        float horizontalGap = clamp(contentWidth * 0.012f, 1f * density, 4f * density);
-        float keyWidth = (contentWidth - 9f * horizontalGap) / 10f;
-        if (keyWidth <= 0f) {
-            return;
+    private void drawActionRail(Canvas canvas, float left, float top, float width, float keyHeight,
+                                float gap, float radius, float textSize) {
+        String[] actions = {"|◀", "▶|", "▣", "Go"};
+        int[] actionRows = {0, 1, 2, 4};
+        for (int i = 0; i < actions.length; i++) {
+            float y = top + actionRows[i] * (keyHeight + gap);
+            drawSpecialKey(canvas, left, y, width, keyHeight, radius, actions[i],
+                    actions[i].equals("Go") ? textSize * 0.65f : textSize * 0.66f, i == 3);
         }
-        float rowGap = clamp(bodyHeight * 0.055f, 1f * density, 4f * density);
-        float keyHeight = Math.max(1f, (bodyHeight - 3f * rowGap) / 4f);
-        float keyRadius = Math.min(keyHeight * 0.23f, 6f * density);
-        float textSize = clamp(keyHeight * 0.57f, 5f * scaledDensity, 13f * scaledDensity);
-
-        drawLettersRow(canvas, TOP_ROW, pad, bodyTop, keyWidth, keyHeight, horizontalGap,
-                keyRadius, textSize);
-
-        float middleWidth = 9f * keyWidth + 8f * horizontalGap;
-        drawLettersRow(canvas, MIDDLE_ROW, pad + (contentWidth - middleWidth) / 2f,
-                bodyTop + keyHeight + rowGap, keyWidth, keyHeight, horizontalGap,
-                keyRadius, textSize);
-
-        float thirdY = bodyTop + 2f * (keyHeight + rowGap);
-        drawSpecialKey(canvas, pad, thirdY, keyWidth * 1.42f, keyHeight, keyRadius,
-                "↑", textSize * 0.88f, false);
-        float thirdStart = pad + keyWidth * 1.42f + horizontalGap;
-        for (int i = 0; i < BOTTOM_ROW.length; i++) {
-            float x = thirdStart + i * (keyWidth + horizontalGap);
-            boolean selected = i == 2;
-            drawKey(canvas, x, thirdY, keyWidth, keyHeight, keyRadius,
-                    BOTTOM_ROW[i], textSize, selected);
-        }
-        float enterX = width - pad - keyWidth * 1.42f;
-        drawSpecialKey(canvas, enterX, thirdY, keyWidth * 1.42f, keyHeight, keyRadius,
-                "↵", textSize * 0.88f, true);
-
-        float utilityY = bodyTop + 3f * (keyHeight + rowGap);
-        float utilityGap = horizontalGap;
-        float utilityWidths = keyWidth * (1.32f + 1.05f + 4.55f + 1.32f) + 3f * utilityGap;
-        float utilityX = pad + Math.max(0f, (contentWidth - utilityWidths) / 2f);
-        drawSpecialKey(canvas, utilityX, utilityY, keyWidth * 1.32f, keyHeight,
-                keyRadius, "?123", textSize * 0.58f, false);
-        utilityX += keyWidth * 1.32f + utilityGap;
-        drawSpecialKey(canvas, utilityX, utilityY, keyWidth * 1.05f, keyHeight,
-                keyRadius, "◎", textSize * 0.78f, false);
-        utilityX += keyWidth * 1.05f + utilityGap;
-        drawSpaceKey(canvas, utilityX, utilityY, keyWidth * 4.55f, keyHeight,
-                keyRadius, textSize * 0.55f);
-        utilityX += keyWidth * 4.55f + utilityGap;
-        drawSpecialKey(canvas, utilityX, utilityY, keyWidth * 1.32f, keyHeight,
-                keyRadius, "↵", textSize * 0.78f, false);
     }
 
     private void drawSuggestion(Canvas canvas, RectF bounds, float height) {
@@ -218,9 +212,15 @@ public class KeyboardThemePreviewView extends View {
     private void drawLettersRow(Canvas canvas, String[] letters, float left, float top,
                                 float keyWidth, float keyHeight, float gap, float radius,
                                 float textSize) {
+        drawLettersRow(canvas, letters, left, top, keyWidth, keyHeight, gap, radius, textSize, false);
+    }
+
+    private void drawLettersRow(Canvas canvas, String[] letters, float left, float top,
+                                float keyWidth, float keyHeight, float gap, float radius,
+                                float textSize, boolean highlightFirst) {
         for (int i = 0; i < letters.length; i++) {
             drawKey(canvas, left + i * (keyWidth + gap), top, keyWidth, keyHeight,
-                    radius, letters[i], textSize, false);
+                    radius, letters[i], textSize, highlightFirst && i == 0);
         }
     }
 
@@ -236,7 +236,7 @@ public class KeyboardThemePreviewView extends View {
         paint.setColor(withAlpha(0xff000000, 34));
         canvas.drawRoundRect(rect, radius, radius, paint);
 
-        if (selected) {
+        if (selected && !xboxStyle) {
             rect.set(x - density * 1.2f, y - density * 1.2f,
                     x + width + density * 1.2f, y + height + density * 1.2f);
             paint.setColor(withAlpha(accentColor, Math.round(28f + pulse * 38f)));
@@ -244,8 +244,18 @@ public class KeyboardThemePreviewView extends View {
         }
 
         rect.set(x, y, x + width, y + height);
-        paint.setColor(selected ? blend(keyColor, accentColor, 0.24f + pulse * 0.10f) : keyColor);
+        paint.setColor(selected && !xboxStyle
+                ? blend(keyColor, accentColor, 0.24f + pulse * 0.10f) : keyColor);
         canvas.drawRoundRect(rect, radius, radius, paint);
+
+        if (selected && xboxStyle) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(Math.max(2f, density * 2f));
+            paint.setColor(accentColor);
+            rect.inset(paint.getStrokeWidth() / 2f, paint.getStrokeWidth() / 2f);
+            canvas.drawRoundRect(rect, radius, radius, paint);
+            paint.setStyle(Paint.Style.FILL);
+        }
 
         paint.setColor(textColor);
         paint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));

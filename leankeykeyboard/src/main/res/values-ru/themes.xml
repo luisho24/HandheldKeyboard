@@ -5,5 +5,11 @@
         <item>Темная тема|Dark</item>
         <item>Темная тема 2|Dark2</item>
         <item>Темная тема 3|Dark3</item>
+        <item>Steam Deck|SteamDeck</item>
+        <item>Xbox|Xbox</item>
+        <item>Nintendo Switch|Switch</item>
+        <item>Retroid Aurora|RetroidAurora</item>
+        <item>Retroid Ember Circuit|RetroidEmber</item>
+        <item>Retroid Quartz|RetroidQuartz</item>
     </string-array>
 </resources>

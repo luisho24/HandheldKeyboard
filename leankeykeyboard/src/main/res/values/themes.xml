@@ -8,5 +8,8 @@
         <item>Steam Deck|SteamDeck</item>
         <item>Xbox|Xbox</item>
         <item>Nintendo Switch|Switch</item>
+        <item>Retroid Aurora|RetroidAurora</item>
+        <item>Retroid Ember Circuit|RetroidEmber</item>
+        <item>Retroid Quartz|RetroidQuartz</item>
     </string-array>
 </resources>

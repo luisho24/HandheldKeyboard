@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="keyboard_background_xbox">#ff121811</color>
-    <color name="candidate_background_xbox">#ff1e291e</color>
-    <color name="candidate_font_color_xbox">#ff80e34b</color>
-    <color name="enter_key_font_color_xbox">#ff80e34b</color>
-    <color name="key_text_default_xbox">#fff0f5ef</color>
+    <!-- Xbox console keyboard: black well, charcoal keycaps and Xbox green action/focus. -->
+    <color name="keyboard_background_xbox">#ff1f1f1f</color>
+    <color name="candidate_background_xbox">#ff1f1f1f</color>
+    <color name="candidate_font_color_xbox">#ff44a244</color>
+    <color name="enter_key_font_color_xbox">#ff44a244</color>
+    <color name="key_text_default_xbox">#fff4f7f4</color>
+    <color name="key_background_xbox">#ff303030</color>
+    <color name="key_focus_color_xbox">#ff44a244</color>
 </resources>

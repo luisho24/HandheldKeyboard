@@ -57,6 +57,9 @@
         <Key android:codes="-2" android:keyEdgeFlags="left" android:keyLabel="@string/keyboardview_keycode_mode_change" android:keyIcon="@drawable/ic_ime_alphabet" />
         <Key android:codes="-1" android:keyLabel="@string/keyboardview_keycode_shift" android:keyIcon="@drawable/ic_ime_shift_off" />
         <Key android:keyWidth="@dimen/space_key_width" android:codes="32" android:keyLabel="@string/keyboardview_keycode_space" android:keyIcon="@drawable/ic_ime_space" />
+        <Key android:codes="-16" android:keyLabel="@string/keyboardview_keycode_edit" />
+        <Key android:codes="-14" android:keyLabel="@string/keyboardview_keycode_up" android:keyIcon="@drawable/ic_ime_up_arrow" />
+        <Key android:codes="-15" android:keyLabel="@string/keyboardview_keycode_down" android:keyIcon="@drawable/ic_ime_down_arrow" />
         <Key android:codes="-3" android:keyLabel="@string/keyboardview_keycode_left" android:keyIcon="@drawable/ic_ime_left_arrow" />
         <Key android:codes="-4" android:keyEdgeFlags="right" android:keyLabel="@string/keyboardview_keycode_right" android:keyIcon="@drawable/ic_ime_right_arrow" />
     </Row>

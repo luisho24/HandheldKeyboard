@@ -24,22 +24,66 @@
             leanbackime:rowCount="5"
             leanbackime:columnCount="11" />
 
-        <Button
-            android:id="@+id/enter"
+        <LinearLayout
+            android:id="@+id/handheld_action_rail"
             android:layout_width="@dimen/handheld_action_key_width"
-            android:layout_height="@dimen/handheld_action_key_height"
-            android:layout_gravity="bottom"
+            android:layout_height="match_parent"
             android:layout_marginLeft="@dimen/handheld_action_key_spacing"
-            android:background="@android:color/transparent"
-            android:fontFamily="sans-serif-medium"
-            android:gravity="center"
-            android:maxLines="2"
-            android:minWidth="@dimen/handheld_action_key_width"
-            android:paddingLeft="@dimen/handheld_action_key_padding"
-            android:paddingRight="@dimen/handheld_action_key_padding"
-            android:text="@string/label_next_key"
-            android:textColor="@color/enter_key_font_color"
-            android:textSize="@dimen/enter_key_font_size" />
+            android:gravity="bottom"
+            android:orientation="vertical"
+            android:padding="@dimen/handheld_action_key_padding">
+
+            <Button
+                android:id="@+id/action_home"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginBottom="@dimen/handheld_action_key_spacing"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:contentDescription="@string/handheld_action_home"
+                android:text="|◀"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/action_end"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginBottom="@dimen/handheld_action_key_spacing"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:contentDescription="@string/handheld_action_end"
+                android:text="▶|"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/action_paste"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:layout_marginBottom="@dimen/handheld_action_key_spacing"
+                android:contentDescription="@string/handheld_action_paste"
+                android:drawableTop="@drawable/ic_ime_clipboard"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:text=""
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/enter"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/handheld_action_key_height"
+                android:background="@android:color/transparent"
+                android:fontFamily="sans-serif-medium"
+                android:gravity="center"
+                android:maxLines="2"
+                android:paddingLeft="@dimen/handheld_action_key_padding"
+                android:paddingRight="@dimen/handheld_action_key_padding"
+                android:text="@string/label_next_key"
+                android:textColor="@color/enter_key_font_color"
+                android:textSize="@dimen/enter_key_font_size" />
+        </LinearLayout>
     </LinearLayout>
 
     <FrameLayout

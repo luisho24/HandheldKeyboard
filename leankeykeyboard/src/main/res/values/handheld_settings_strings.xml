@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="handheld_action_home">Home</string>
+    <string name="handheld_action_end">End</string>
+    <string name="handheld_action_paste">Paste</string>
+    <string name="handheld_settings_eyebrow">HANDHELD EDITION</string>
+    <string name="handheld_settings_title">Keyboard settings</string>
+    <string name="handheld_settings_subtitle">Tune the keyboard for your screen and controller.</string>
+    <string name="handheld_settings_badge">SETTINGS</string>
+    <string name="handheld_settings_navigation_hint">Use the D-pad or touch to choose a section</string>
+    <string name="handheld_settings_activate_desc">Enable Handheld Keyboard in Android input settings.</string>
+    <string name="handheld_settings_setup_desc">Review onboarding, themes, and device setup choices.</string>
     <string name="handheld_settings_appearance">Theme &amp; appearance</string>
     <string name="handheld_settings_appearance_desc">Choose light, dark, or system colors; customize palettes, backgrounds, and keyboard surfaces.</string>
     <string name="handheld_settings_keyboard">Keyboard layout &amp; size</string>

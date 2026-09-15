@@ -23,6 +23,17 @@ public class KbSettingsActivity extends FragmentActivity {
             return;
         }
 
+        if ("com.handheldkeyboard.ime".equals(getPackageName())) {
+            // The handheld flavor has its own card-based settings home. Keep the
+            // shared guided settings screen for the TV and Play Store variants.
+            Intent handheldSettings = new Intent();
+            handheldSettings.setClassName(getPackageName(),
+                    "com.liskovsoft.leankeyboard.activity.settings.HandheldSettingsActivity");
+            startActivity(handheldSettings);
+            finish();
+            return;
+        }
+
         GuidedStepSupportFragment.addAsRoot(this, new KbSettingsFragment(), android.R.id.content);
     }
 

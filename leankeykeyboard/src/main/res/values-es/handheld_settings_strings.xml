@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="handheld_action_home">Inicio</string>
+    <string name="handheld_action_end">Fin</string>
+    <string name="handheld_action_paste">Pegar</string>
+    <string name="handheld_settings_eyebrow">EDICIÓN HANDHELD</string>
+    <string name="handheld_settings_title">Ajustes del teclado</string>
+    <string name="handheld_settings_subtitle">Adapta el teclado a tu pantalla y mando.</string>
+    <string name="handheld_settings_badge">AJUSTES</string>
+    <string name="handheld_settings_navigation_hint">Usa la cruceta o toca una sección para elegirla</string>
+    <string name="handheld_settings_activate_desc">Activa Handheld Keyboard en los ajustes de entrada de Android.</string>
+    <string name="handheld_settings_setup_desc">Revisa el onboarding, los temas y las opciones del dispositivo.</string>
     <string name="handheld_settings_appearance">Tema y apariencia</string>
     <string name="handheld_settings_appearance_desc">Elige colores claros, oscuros o del sistema; personaliza paletas, fondos y superficies.</string>
     <string name="handheld_settings_keyboard">Distribución y tamaño</string>

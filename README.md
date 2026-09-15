@@ -2,11 +2,12 @@
 
 A controller-friendly Android keyboard for handheld gaming devices, Android TV, and touchscreen use. This is a modified version of [LeanKeyboard](https://github.com/yuliskov/LeanKeyboard/tree/6.1.31).
 
-**Modified on 2026-09-14.** This project adds handheld layouts and navigation, a redesigned onboarding flow, adjustable sizing, custom light/dark themes, keyboard surface effects, configurable sound feedback, emoji and textmoji pickers, and a themed editor-action key integrated into the keyboard row. The handheld keyboard repurposes its unused on-screen microphone key for emoji access. The inherited source is distributed under GPL-3.0-only; see [LICENSE.md](LICENSE.md).
+**Modified on 2026-09-14.** This project adds handheld layouts and navigation, a redesigned onboarding flow, adjustable sizing, custom light/dark themes, keyboard surface effects, configurable sound feedback, emoji and textmoji pickers with whole-grapheme backspace, and a themed editor-action key integrated into the keyboard row. The handheld keyboard repurposes its unused on-screen microphone key for emoji access. The inherited source is distributed under GPL-3.0-only; see [LICENSE.md](LICENSE.md).
 
 ## Features
 
 - Navigate and type with a D-pad or supported game controller, including corrected spatial key focus and controller-aware key hints/remapping.
+- Show recognizable Xbox, PlayStation, Nintendo Switch, and generic controller icons beside mapped keyboard actions.
 - Move the editor cursor with left/right controls while keeping cursor movement inside the focused editor.
 - Adapt the keyboard to handheld screen sizes and landscape layouts; adjust its height or use a floating layout.
 - Choose system, light, or dark appearance. Edit colors and background images for the custom theme variants.
@@ -19,11 +20,11 @@ A controller-friendly Android keyboard for handheld gaming devices, Android TV, 
 
 ## Download and install
 
-Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.3 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
+Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.4 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
 
 Install it with Android Debug Bridge:
 
-    adb install -r HandheldKeyboard-v0.4.3-release.apk
+    adb install -r HandheldKeyboard-v0.4.4-release.apk
     adb shell ime enable com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
     adb shell ime set com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
 

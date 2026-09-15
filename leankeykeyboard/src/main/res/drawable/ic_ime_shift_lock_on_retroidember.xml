@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Angular controller badge for the Ember Circuit palette. -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,2L3,11h5v5h8v-5h5L12,2zM8,17h8v5H8z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M10,18h4v2h-4z" />
+</vector>

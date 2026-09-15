@@ -26,7 +26,7 @@
     <string name="kb_settings_desc">Налаштування клавіатури</string>
     <string name="activate_keyboard">Активувати клавіатуру</string>
     <string name="change_layout">Вибрати розкладку</string>
-    <string name="enable_kb_in_system_prefs">Потрібно ввімкнути %s у системних налаштуваннях</string>
+    <string name="enable_kb_in_system_prefs">Потрібно ввімкнути %1$s у системних налаштуваннях</string>
     <string name="about">Про додаток</string>
     <string name="about_desc">Про додаток</string>
     <string name="keep_on_screen">Постійно відображати</string>
@@ -35,7 +35,7 @@
     <string name="misc_desc">Різні налаштування</string>
     <string name="increase_kbd_size">Збільшити</string>
     <string name="increase_kbd_size_desc">Збільшити клавіатуру</string>
-    <string name="kbd_activation_error2">Трапилася помилка. Спробуйте активувати %s цими командами.\n\n%s\n\n%s</string>
+    <string name="kbd_activation_error2">Трапилася помилка. Спробуйте активувати %1$s цими командами.\n\n%2$s\n\n%3$s</string>
     <string name="about_donate">Допомогти проекту</string>
     <string name="about_web_site">Вебсайт</string>
     <string name="kbd_activation_error">Не вдається відкрити системні налаштування клавіатури.\nПеренаправлення на сайт з інструкцією для ручного активування…</string>

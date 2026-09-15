@@ -26,3 +26,7 @@ The app depends on Algolia Voice Overlay 1.1.0 (com.algolia.instantsearch:voice:
 ## Android libraries
 
 The app also builds against AndroidX AppCompat, Leanback, ConstraintLayout, and Google Material Components, which are distributed under Apache License 2.0. Their upstream notices and terms continue to apply to those libraries.
+
+## Flat Gamepad Icons
+
+The controller hint artwork bundled under `leankeykeyboard/src/main/res/drawable-nodpi-v4/controller_*.png` comes from [Flat Gamepad Icons](https://robthefivenine.itch.io/flat-gamepad-icons) by RobTheFiveNine. It is used under the Creative Commons Attribution-ShareAlike 4.0 International license. The complete license text is included at [LICENSES/Flat-Gamepad-Icons-CC-BY-SA-4.0.txt](LICENSES/Flat-Gamepad-Icons-CC-BY-SA-4.0.txt).
