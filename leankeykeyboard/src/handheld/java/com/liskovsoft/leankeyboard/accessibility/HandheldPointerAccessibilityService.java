@@ -135,15 +135,29 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         if (!HandheldPointerPreferences.isControlsEnabled(this) ||
                 !HandheldPointerPreferences.isPointerActive(this) ||
                 event.getActionMasked() != MotionEvent.ACTION_MOVE) return false;
-        float x = event.getAxisValue(MotionEvent.AXIS_Z);
-        float y = event.getAxisValue(MotionEvent.AXIS_RZ);
+        // Retroid and other Android handhelds may expose their D-pad as HAT axes and
+        // their sticks as X/Y, Z/RZ, or RX/RY. Accept all of these while pointer mode is
+        // active so the input cannot fall through to keyboard navigation.
+        float x = event.getAxisValue(MotionEvent.AXIS_HAT_X);
+        float y = event.getAxisValue(MotionEvent.AXIS_HAT_Y);
+        int speed = HandheldPointerPreferences.getSpeed(this);
+        if (Math.abs(x) >= DEAD_ZONE || Math.abs(y) >= DEAD_ZONE) {
+            int hatStep = dp(DPAD_STEP_DP + speed * 9);
+            moveTo(mCursorX + Math.round(x * hatStep), mCursorY + Math.round(y * hatStep), true);
+            return true;
+        }
+        x = event.getAxisValue(MotionEvent.AXIS_Z);
+        y = event.getAxisValue(MotionEvent.AXIS_RZ);
         if (Math.abs(x) < DEAD_ZONE && Math.abs(y) < DEAD_ZONE) {
             x = event.getAxisValue(MotionEvent.AXIS_RX);
             y = event.getAxisValue(MotionEvent.AXIS_RY);
         }
+        if (Math.abs(x) < DEAD_ZONE && Math.abs(y) < DEAD_ZONE) {
+            x = event.getAxisValue(MotionEvent.AXIS_X);
+            y = event.getAxisValue(MotionEvent.AXIS_Y);
+        }
         if (Math.abs(x) < DEAD_ZONE && Math.abs(y) < DEAD_ZONE) return false;
-        int step = dp(HandheldPointerPreferences.getSpeed(this) == 0 ? 8 :
-                HandheldPointerPreferences.getSpeed(this) == 2 ? 22 : 14);
+        int step = dp(speed == 0 ? 8 : speed == 2 ? 22 : 14);
         moveTo(mCursorX + Math.round(x * step), mCursorY + Math.round(y * step), false);
         return true;
     }

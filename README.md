@@ -35,11 +35,11 @@ Donations help maintain and test Handheld Keyboard on real handheld devices.
 
 ## Download and install
 
-Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.6 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
+Download the latest APK and its SHA-256 checksum from [GitHub Releases](https://github.com/luisho24/HandheldKeyboard/releases/latest). The v0.4.7 APK is built from the minified `handheldRelease` variant. To allow an in-place upgrade from v0.4.0, it is signed with the same Android debug certificate used by that release. **This is not a production signing key**; use this APK for testing/sideloading only. A production release requires a privately managed signing key and cannot replace this build without uninstalling it first.
 
 Install it with Android Debug Bridge:
 
-    adb install -r HandheldKeyboard-v0.4.6-release.apk
+    adb install -r HandheldKeyboard-v0.4.7-release.apk
     adb shell ime enable com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
     adb shell ime set com.handheldkeyboard.ime/com.liskovsoft.leankeyboard.ime.LeanbackImeService
 
@@ -47,7 +47,7 @@ You can also enable and select the keyboard in Android's Languages & input setti
 
 ### Optional controller pointer
 
-Open **Keyboard settings → Pointer & mouse → Enable controller pointer in Android** and enable **Handheld controller pointer** in Android Accessibility. The service starts with pointer mode off and displays a controller cursor only after its configurable two-button chord is pressed. It does not inspect screen content or typed text. While pointer mode is active, its D-pad controls are captured by the pointer; when it is inactive, the controller keeps its normal keyboard navigation. The right stick moves the pointer while the keyboard is on screen, leaving the keyboard's left-stick navigation untouched.
+Open **Keyboard settings → Pointer & mouse → Enable controller pointer in Android** and enable **Handheld controller pointer** in Android Accessibility. The service starts with pointer mode off and displays a controller cursor only after its configurable two-button chord is pressed. It does not inspect screen content or typed text. While pointer mode is active, its D-pad controls are captured by the pointer; when it is inactive, the controller keeps its normal keyboard navigation. While pointer mode is on, either stick and HAT/D-pad motion move the pointer while the keyboard is on screen; turn the pointer off to resume keyboard navigation.
 
 ## Build from source
 
