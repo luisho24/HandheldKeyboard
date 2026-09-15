@@ -1,6 +1,6 @@
 # Privacy
 
-This note describes the Handheld Keyboard source and v0.4.7 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
+This note describes the Handheld Keyboard source and v0.4.8 handheld build. It is not a statement about Android, device manufacturers, the apps where you type, or third-party recognition providers.
 
 ## What the keyboard does with text
 

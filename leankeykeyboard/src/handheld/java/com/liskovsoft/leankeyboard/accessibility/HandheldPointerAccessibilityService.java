@@ -82,6 +82,10 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
 
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
+        return handleControllerKey(event);
+    }
+
+    private boolean handleControllerKey(KeyEvent event) {
         if (!HandheldPointerPreferences.isControlsEnabled(this)) return false;
         int keyCode = event.getKeyCode();
         int action = event.getAction();
@@ -129,12 +133,16 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         return false;
     }
 
-    /** Called by the IME while it is visible. Only right-stick axes are accepted. */
+    /** Called by either the focused accessibility overlay or the IME bridge. */
     @Override
     public boolean onPointerMotion(MotionEvent event) {
+        return handlePointerMotion(event);
+    }
+
+    private boolean handlePointerMotion(MotionEvent event) {
         if (!HandheldPointerPreferences.isControlsEnabled(this) ||
-                !HandheldPointerPreferences.isPointerActive(this) ||
-                event.getActionMasked() != MotionEvent.ACTION_MOVE) return false;
+                !HandheldPointerPreferences.isPointerActive(this)) return false;
+        if (event.getActionMasked() != MotionEvent.ACTION_MOVE) return true;
         // Retroid and other Android handhelds may expose their D-pad as HAT axes and
         // their sticks as X/Y, Z/RZ, or RX/RY. Accept all of these while pointer mode is
         // active so the input cannot fall through to keyboard navigation.
@@ -156,7 +164,7 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
             x = event.getAxisValue(MotionEvent.AXIS_X);
             y = event.getAxisValue(MotionEvent.AXIS_Y);
         }
-        if (Math.abs(x) < DEAD_ZONE && Math.abs(y) < DEAD_ZONE) return false;
+        if (Math.abs(x) < DEAD_ZONE && Math.abs(y) < DEAD_ZONE) return true;
         int step = dp(speed == 0 ? 8 : speed == 2 ? 22 : 14);
         moveTo(mCursorX + Math.round(x * step), mCursorY + Math.round(y * step), false);
         return true;
@@ -192,11 +200,13 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         refreshScreenBounds();
         if (mPointerView == null) {
             mPointerView = new PointerView(this);
-            int size = dp(CURSOR_SIZE_DP);
-            mWindowParams = new WindowManager.LayoutParams(size, size,
+            mWindowParams = new WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
                     WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                    // The surface intentionally receives controller focus but remains completely
+                    // non-touchable, so it cannot block taps on the foreground app.
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
                             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     android.graphics.PixelFormat.TRANSLUCENT);
             mWindowParams.gravity = android.view.Gravity.TOP | android.view.Gravity.START;
@@ -209,6 +219,8 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
             try {
                 mWindowManager.addView(mPointerView, mWindowParams);
                 mOverlayAttached = true;
+                mPointerView.setFocusableInTouchMode(true);
+                mPointerView.requestFocus();
             } catch (RuntimeException ignored) {
                 mOverlayAttached = false;
                 return;
@@ -216,9 +228,7 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         }
         if (entering && HandheldPointerPreferences.areAnimationsEnabled(this)) {
             mPointerView.setAlpha(0f);
-            mPointerView.setScaleX(.55f);
-            mPointerView.setScaleY(.55f);
-            mPointerView.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(180).start();
+            mPointerView.animate().alpha(1f).setDuration(180).start();
         }
     }
 
@@ -247,25 +257,14 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         mCursorY = Math.max(radius, Math.min(mScreenHeight - radius, y));
         updateWindowPosition();
         if (dpad && HandheldPointerPreferences.areAnimationsEnabled(this)) {
-            mPointerView.animate().cancel();
-            mPointerView.setScaleX(.88f);
-            mPointerView.setScaleY(.88f);
-            mPointerView.animate().scaleX(1f).scaleY(1f).setDuration(100).start();
+            mPointerView.pulse(false);
         }
     }
 
     private void updateWindowPosition() {
-        if (mWindowParams == null || mPointerView == null || !mOverlayAttached && mWindowManager == null) return;
-        int size = dp(CURSOR_SIZE_DP);
-        mWindowParams.x = mCursorX - size / 2;
-        mWindowParams.y = mCursorY - size / 2;
-        if (mOverlayAttached) {
-            try {
-                mWindowManager.updateViewLayout(mPointerView, mWindowParams);
-            } catch (RuntimeException ignored) {
-                mOverlayAttached = false;
-            }
-        }
+        // The overlay covers the screen so it can receive controller motion. The cursor
+        // itself is drawn at mCursorX/mCursorY inside that surface.
+        if (mPointerView != null) mPointerView.invalidate();
     }
 
     private void tap() {
@@ -334,10 +333,29 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
         private final Paint mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private int mAccent = Color.rgb(104, 235, 210);
         private int mRing = Color.WHITE;
+        private float mPulse = 1f;
+        private final Runnable mResetPulse = () -> { mPulse = 1f; invalidate(); };
 
         PointerView(Context context) {
             super(context);
+            setFocusable(true);
+            setFocusableInTouchMode(true);
             setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
+        @Override
+        public boolean onGenericMotionEvent(MotionEvent event) {
+            return handlePointerMotion(event) || super.onGenericMotionEvent(event);
+        }
+
+        @Override
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            return handleControllerKey(event) || super.onKeyDown(keyCode, event);
+        }
+
+        @Override
+        public boolean onKeyUp(int keyCode, KeyEvent event) {
+            return handleControllerKey(event) || super.onKeyUp(keyCode, event);
         }
 
         void refreshStyle() {
@@ -368,31 +386,32 @@ public class HandheldPointerAccessibilityService extends AccessibilityService
 
         void pulse(boolean click) {
             if (!HandheldPointerPreferences.areAnimationsEnabled(HandheldPointerAccessibilityService.this)) return;
-            animate().cancel();
-            setScaleX(click ? 1.35f : 1.18f);
-            setScaleY(click ? 1.35f : 1.18f);
-            animate().scaleX(1f).scaleY(1f).setDuration(click ? 170 : 120).start();
+            removeCallbacks(mResetPulse);
+            mPulse = click ? 1.35f : 1.18f;
+            invalidate();
+            postDelayed(mResetPulse, click ? 170 : 120);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
-            float center = getWidth() / 2f;
-            float radius = getWidth() * .27f;
+            float centerX = mCursorX;
+            float centerY = mCursorY;
+            float radius = dp(12) * mPulse;
             mPaint.setStyle(Paint.Style.FILL);
             mPaint.setColor(Color.argb(45, Color.red(mAccent), Color.green(mAccent), Color.blue(mAccent)));
             mPaint.setShadowLayer(dp(5), 0, dp(1), Color.argb(170, 0, 0, 0));
-            canvas.drawCircle(center, center, radius + dp(4), mPaint);
+            canvas.drawCircle(centerX, centerY, radius + dp(4), mPaint);
             mPaint.clearShadowLayer();
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(dp(2));
             mPaint.setColor(mRing);
-            canvas.drawCircle(center, center, radius, mPaint);
+            canvas.drawCircle(centerX, centerY, radius, mPaint);
             mPaint.setStrokeWidth(dp(1));
-            canvas.drawLine(center - radius - dp(5), center, center + radius + dp(5), center, mPaint);
-            canvas.drawLine(center, center - radius - dp(5), center, center + radius + dp(5), mPaint);
+            canvas.drawLine(centerX - radius - dp(5), centerY, centerX + radius + dp(5), centerY, mPaint);
+            canvas.drawLine(centerX, centerY - radius - dp(5), centerX, centerY + radius + dp(5), mPaint);
             mPaint.setStyle(Paint.Style.FILL);
             mPaint.setColor(mRing);
-            canvas.drawCircle(center, center, dp(2), mPaint);
+            canvas.drawCircle(centerX, centerY, dp(2), mPaint);
         }
     }
 }
