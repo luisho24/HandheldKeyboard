@@ -29,4 +29,35 @@
     <string name="handheld_releases">Versiones</string>
     <string name="handheld_releases_desc">Descarga las versiones publicadas y consulta sus notas.</string>
     <string name="handheld_about_version_desc">Versión instalada en este dispositivo.</string>
+    <string name="handheld_settings_pointer">Puntero y ratón</string>
+    <string name="handheld_settings_pointer_desc">Controla un cursor del sistema animado con el mando sin cambiar la navegación del teclado.</string>
+    <string name="handheld_pointer_service_label">Puntero de mando Handheld</string>
+    <string name="handheld_pointer_service_description">Cursor opcional de mando. No lee contenido de pantalla ni texto del teclado.</string>
+    <string name="handheld_pointer_enable_android">Activar puntero de mando en Android</string>
+    <string name="handheld_pointer_enable_android_desc">Abre Accesibilidad, activa Puntero de mando Handheld y vuelve aquí.</string>
+    <string name="handheld_pointer_controls">Permitir puntero de mando</string>
+    <string name="handheld_pointer_controls_desc">Permite que el acorde configurado active o desactive el modo puntero.</string>
+    <string name="handheld_pointer_chord">Acorde para alternar puntero</string>
+    <string name="handheld_pointer_chord_desc">Pulsa ambos botones M configurados para mostrar u ocultar el cursor.</string>
+    <string name="handheld_pointer_chord_first">Elige el primer botón del acorde</string>
+    <string name="handheld_pointer_chord_second">Elige el segundo botón del acorde</string>
+    <string name="handheld_pointer_click">Botón de clic</string>
+    <string name="handheld_pointer_click_desc">Predeterminado: A. Toca la ubicación actual del cursor.</string>
+    <string name="handheld_pointer_back">Botón Atrás</string>
+    <string name="handheld_pointer_back_desc">Predeterminado: B. Vuelve atrás mientras el modo puntero está activo.</string>
+    <string name="handheld_pointer_scroll_up">Botón subir</string>
+    <string name="handheld_pointer_scroll_up_desc">Predeterminado: L1. Desplaza la página actual hacia arriba.</string>
+    <string name="handheld_pointer_scroll_down">Botón bajar</string>
+    <string name="handheld_pointer_scroll_down_desc">Predeterminado: R1. Desplaza la página actual hacia abajo.</string>
+    <string name="handheld_pointer_theme">Tema del cursor</string>
+    <string name="handheld_pointer_theme_desc">Usa el acento del teclado o elige un color dedicado.</string>
+    <string name="handheld_pointer_speed">Velocidad del cursor</string>
+    <string name="handheld_pointer_speed_desc">Controla el paso de la cruceta y la sensibilidad del stick derecho.</string>
+    <string name="handheld_pointer_animations">Animaciones del cursor</string>
+    <string name="handheld_pointer_animations_desc">Anima la activación, el movimiento y la respuesta de clic.</string>
+    <string-array name="handheld_pointer_button_options">
+        <item>A</item><item>B</item><item>X</item><item>Y</item><item>L1</item><item>R1</item><item>L2</item><item>R2</item><item>M1</item><item>M2</item><item>M3</item><item>M4</item>
+    </string-array>
+    <string-array name="handheld_pointer_theme_options"><item>Usar acento del teclado</item><item>Menta</item><item>Violeta</item><item>Ámbar</item></string-array>
+    <string-array name="handheld_pointer_speed_options"><item>Precisa</item><item>Equilibrada</item><item>Rápida</item></string-array>
 </resources>

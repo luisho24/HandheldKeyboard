@@ -25,6 +25,7 @@ import androidx.leanback.app.GuidedStepSupportFragment;
 
 import com.liskovsoft.leankeyboard.activity.settings.KbActivationActivity;
 import com.liskovsoft.leankeyboard.fragments.settings.KeyboardSoundSettingsFragment;
+import com.liskovsoft.leankeyboard.fragments.settings.HandheldPointerSettingsFragment;
 import com.liskovsoft.leankeyboard.fragments.settings.MiscFragment;
 import com.liskovsoft.leankeyboard.receiver.RestartServiceReceiver;
 import com.liskovsoft.leankeykeyboard.R;
@@ -84,6 +85,9 @@ public class HandheldSettingsActivity extends FragmentActivity {
                 return;
             case "sound":
                 openGuided(new KeyboardSoundSettingsFragment());
+                return;
+            case "pointer":
+                openGuided(new HandheldPointerSettingsFragment());
                 return;
             case "more":
                 openGuided(new MiscFragment());
@@ -379,6 +383,9 @@ public class HandheldSettingsActivity extends FragmentActivity {
             new CardSpec("♪", R.string.handheld_settings_feedback,
                     R.string.handheld_settings_feedback_desc,
                     activity -> activity.openGuided(new KeyboardSoundSettingsFragment())),
+            new CardSpec("◉", R.string.handheld_settings_pointer,
+                    R.string.handheld_settings_pointer_desc,
+                    activity -> activity.openGuided(new HandheldPointerSettingsFragment())),
             new CardSpec("ⓘ", R.string.handheld_settings_about,
                     R.string.handheld_settings_about_desc,
                     activity -> activity.openHandheldAbout()),

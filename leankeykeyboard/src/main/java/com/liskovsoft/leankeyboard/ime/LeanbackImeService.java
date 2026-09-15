@@ -300,6 +300,11 @@ public class LeanbackImeService extends KeyMapperImeService {
     public boolean onGenericMotionEvent(MotionEvent event) {
         boolean isTouchNavigation = (event.getSource() & InputDevice.SOURCE_TOUCH_NAVIGATION) == InputDevice.SOURCE_TOUCH_NAVIGATION;
         boolean isJoystick = (event.getSource() & InputDevice.SOURCE_CLASS_JOYSTICK) == InputDevice.SOURCE_CLASS_JOYSTICK;
+        // The pointer uses the right stick only. Forward it before keyboard navigation so
+        // it never steals the keyboard's left-stick or D-pad focus controls.
+        if (isInputViewShown() && isJoystick && PointerInputBridge.forward(event)) {
+            return true;
+        }
         if (isInputViewShown() && (isTouchNavigation || isJoystick) && mKeyboardController.onGenericMotionEvent(event)) {
             return true;
         }

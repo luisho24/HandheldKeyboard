@@ -29,4 +29,35 @@
     <string name="handheld_releases">Releases</string>
     <string name="handheld_releases_desc">Download published app builds and review their notes.</string>
     <string name="handheld_about_version_desc">Version installed on this device.</string>
+    <string name="handheld_settings_pointer">Pointer &amp; mouse</string>
+    <string name="handheld_settings_pointer_desc">Control an animated system cursor with your gamepad without changing keyboard navigation.</string>
+    <string name="handheld_pointer_service_label">Handheld controller pointer</string>
+    <string name="handheld_pointer_service_description">Optional controller cursor. It does not read screen content or keyboard text.</string>
+    <string name="handheld_pointer_enable_android">Enable controller pointer in Android</string>
+    <string name="handheld_pointer_enable_android_desc">Open Accessibility settings, enable Handheld controller pointer, then return here.</string>
+    <string name="handheld_pointer_controls">Allow controller pointer</string>
+    <string name="handheld_pointer_controls_desc">Lets the configured chord enable or disable pointer mode.</string>
+    <string name="handheld_pointer_chord">Pointer toggle chord</string>
+    <string name="handheld_pointer_chord_desc">Press both configured M buttons together to show or hide the cursor.</string>
+    <string name="handheld_pointer_chord_first">Choose first chord button</string>
+    <string name="handheld_pointer_chord_second">Choose second chord button</string>
+    <string name="handheld_pointer_click">Click button</string>
+    <string name="handheld_pointer_click_desc">Default: A. Tap the cursor’s current location.</string>
+    <string name="handheld_pointer_back">Back button</string>
+    <string name="handheld_pointer_back_desc">Default: B. Goes back while pointer mode is active.</string>
+    <string name="handheld_pointer_scroll_up">Scroll up button</string>
+    <string name="handheld_pointer_scroll_up_desc">Default: L1. Scrolls the current page up.</string>
+    <string name="handheld_pointer_scroll_down">Scroll down button</string>
+    <string name="handheld_pointer_scroll_down_desc">Default: R1. Scrolls the current page down.</string>
+    <string name="handheld_pointer_theme">Cursor theme</string>
+    <string name="handheld_pointer_theme_desc">Use the keyboard accent or select a dedicated cursor color.</string>
+    <string name="handheld_pointer_speed">Cursor speed</string>
+    <string name="handheld_pointer_speed_desc">Controls D-pad step size and right-stick sensitivity.</string>
+    <string name="handheld_pointer_animations">Cursor animations</string>
+    <string name="handheld_pointer_animations_desc">Animate enable, movement, and click feedback.</string>
+    <string-array name="handheld_pointer_button_options">
+        <item>A</item><item>B</item><item>X</item><item>Y</item><item>L1</item><item>R1</item><item>L2</item><item>R2</item><item>M1</item><item>M2</item><item>M3</item><item>M4</item>
+    </string-array>
+    <string-array name="handheld_pointer_theme_options"><item>Match keyboard accent</item><item>Mint</item><item>Violet</item><item>Amber</item></string-array>
+    <string-array name="handheld_pointer_speed_options"><item>Careful</item><item>Balanced</item><item>Fast</item></string-array>
 </resources>

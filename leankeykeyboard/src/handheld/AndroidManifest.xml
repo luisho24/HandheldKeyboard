@@ -3,6 +3,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:ignore="MissingLeanbackLauncher,ImpliedTouchscreenHardware,MissingLeanbackSupport">
     <application>
+        <service
+            android:name="com.liskovsoft.leankeyboard.accessibility.HandheldPointerAccessibilityService"
+            android:description="@string/handheld_pointer_service_description"
+            android:exported="false"
+            android:label="@string/handheld_pointer_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/handheld_pointer_accessibility_service" />
+        </service>
         <activity
             android:name="com.liskovsoft.leankeyboard.activity.settings.HandheldSettingsActivity"
             android:exported="false"
